@@ -1,0 +1,561 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PumpCheck</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+/* Layout: sticky brand bar, compact hero, three-tab tool (certificate / expected / check) in a single column up to 960px */
+:root{
+  --bg:#f3f6f7; --surface:#ffffff; --fg:#10242b; --muted:#587078; --line:#d9e3e6;
+  --accent:#0b6b73; --accent-fg:#ffffff; --accent-soft:#dff0f1; --heat:#d9622b;
+  --good:#1f7a4d; --good-bg:#def3e7; --warn:#9a6200; --warn-bg:#fcefd0; --bad:#b3261e; --bad-bg:#fbe0dd;
+  --font-display:"Space Grotesk","Inter",system-ui,sans-serif; --font-body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0c1a1f; --surface:#132830; --fg:#e6f0f2; --muted:#93acb3; --line:#25414a;
+  --accent:#4fc3cb; --accent-fg:#06242a; --accent-soft:#16363d; --heat:#f08a55;
+  --good:#6fd4a0; --good-bg:#12372a; --warn:#f0c15a; --warn-bg:#3b2e0d; --bad:#ff8f86; --bad-bg:#401c19; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0c1a1f; --surface:#132830; --fg:#e6f0f2; --muted:#93acb3; --line:#25414a;
+  --accent:#4fc3cb; --accent-fg:#06242a; --accent-soft:#16363d; --heat:#f08a55;
+  --good:#6fd4a0; --good-bg:#12372a; --warn:#f0c15a; --warn-bg:#3b2e0d; --bad:#ff8f86; --bad-bg:#401c19; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:15px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 40px}
+.wrap{max-width:960px;margin:0 auto}
+h1,h2,h3{font-family:var(--font-display);text-wrap:balance;margin:0;line-height:1.15}
+header.bar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 0}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-weight:700;font-size:20px}
+.brand small{display:block;font-family:var(--font-body);font-weight:400;font-size:11px;color:var(--muted);letter-spacing:.04em}
+.lang{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
+.lang button{border:0;background:transparent;color:var(--muted);padding:7px 12px;font:600 13px var(--font-body);cursor:pointer}
+.lang button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.hero{padding:18px 0 22px}
+.hero h1{font-size:clamp(26px,5vw,40px);max-width:20ch}
+.hero p{color:var(--muted);max-width:60ch;margin:10px 0 0}
+nav.tabs{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin-bottom:20px}
+nav.tabs button{border:0;background:transparent;color:var(--muted);font:600 14px var(--font-body);padding:11px 14px;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px;display:flex;gap:8px;align-items:center}
+nav.tabs button .n{width:22px;height:22px;border-radius:50%;background:var(--line);color:var(--fg);display:grid;place-items:center;font-size:12px}
+nav.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+nav.tabs button[aria-selected="true"] .n{background:var(--accent);color:var(--accent-fg)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.panel h2{font-size:22px;margin-bottom:6px}
+.lead{color:var(--muted);margin:0 0 18px;max-width:70ch}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:20px;align-items:start}
+@media(max-width:760px){.grid{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;min-width:0}
+.card h3{font-size:16px;margin-bottom:12px}
+.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.fields .full{grid-column:1/-1}
+label{display:block;font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.03em;margin-bottom:4px}
+input,select{width:100%;font:15px var(--font-body);color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 10px;min-width:0}
+.hint{font-size:12px;color:var(--muted);margin-top:4px}
+.btn{font:600 14px var(--font-body);border:1px solid var(--accent);background:var(--accent);color:var(--accent-fg);border-radius:8px;padding:9px 14px;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn.small{padding:5px 10px;font-size:13px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:var(--bg);border-radius:10px;padding:12px}
+.kpi .v{font:700 24px var(--font-display);font-variant-numeric:tabular-nums}
+.kpi .l{font-size:12px;color:var(--muted)}
+.kpi.main{background:var(--accent-soft)}
+.bars{display:grid;gap:8px;margin:14px 0}
+.bar-row{display:grid;grid-template-columns:110px minmax(0,1fr) 82px;gap:10px;align-items:center;font-size:13px}
+.bar-row .track{background:var(--bg);border-radius:6px;height:20px;overflow:hidden}
+.bar-row .fill{height:100%;border-radius:6px}
+.bar-row .val{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13.5px;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+td.num,th.num{text-align:right}
+.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600}
+.pill.good{background:var(--good-bg);color:var(--good)}.pill.warn{background:var(--warn-bg);color:var(--warn)}.pill.bad{background:var(--bad-bg);color:var(--bad)}.pill.neutral{background:var(--bg);color:var(--muted)}
+.note{font-size:12.5px;color:var(--muted);border-left:3px solid var(--line);padding:2px 0 2px 10px;margin:12px 0 0}
+.example{display:inline-block;font-size:11.5px;font-weight:600;color:var(--warn);background:var(--warn-bg);padding:2px 8px;border-radius:6px;margin-bottom:10px}
+.verdict{border-radius:10px;padding:14px;margin-bottom:14px}
+.verdict.good{background:var(--good-bg);color:var(--good)}.verdict.warn{background:var(--warn-bg);color:var(--warn)}.verdict.bad{background:var(--bad-bg);color:var(--bad)}
+.verdict b{font:700 17px var(--font-display);display:block;margin-bottom:2px}
+.verdict span{color:var(--fg);font-size:14px}
+.gauge{position:relative;height:14px;border-radius:7px;margin:34px 0 28px;background:linear-gradient(90deg,var(--bad-bg),var(--warn-bg),var(--good-bg))}
+.gauge .mk{position:absolute;top:-8px;width:2px;height:30px;background:var(--fg)}
+.gauge .mk span{position:absolute;white-space:nowrap;font-size:11px;font-weight:600;left:50%;transform:translateX(-50%)}
+.gauge .mk.up span{top:-16px}.gauge .mk.dn span{top:32px}
+.gauge .you{background:var(--heat);width:4px}
+ul.tips{margin:8px 0 0;padding-left:18px}ul.tips li{margin:4px 0}
+.map{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:12px}
+.map select{font-size:13px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:8px;font-size:14px;z-index:20}
+.how summary{cursor:pointer;font:600 15px var(--font-display)}.how div{margin-top:12px;font-size:14px}.how p{margin:8px 0}
+footer{margin-top:36px;color:var(--muted);font-size:12.5px;border-top:1px solid var(--line);padding-top:16px}
+</style>
+<style>html{color-scheme:light}body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
+</head>
+<body>
+
+
+<div class="wrap">
+<header class="bar">
+  <div class="brand">
+    <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><rect width="34" height="34" rx="9" fill="var(--accent)"/><path d="M8 22c3-8 6-8 9 0s6 8 9 0" fill="none" stroke="var(--accent-fg)" stroke-width="2.4" stroke-linecap="round"/><circle cx="17" cy="11" r="3" fill="var(--heat)"/></svg>
+    <div>PumpCheck<small data-i18n="tag"></small></div>
+  </div>
+  <div class="lang" role="group" aria-label="Language">
+    <button id="lg-el" aria-pressed="true">ΕΛ</button><button id="lg-en" aria-pressed="false">EN</button>
+  </div>
+</header>
+
+<section class="hero">
+  <h1 data-i18n="hero_h"></h1>
+  <p data-i18n="hero_p"></p>
+</section>
+
+<nav class="tabs" role="tablist">
+  <button role="tab" id="tb-certificate" data-tab="certificate"><span class="n">1</span><span data-i18n="tab1"></span></button>
+  <button role="tab" id="tb-expected" data-tab="expected"><span class="n">2</span><span data-i18n="tab2"></span></button>
+  <button role="tab" id="tb-check" data-tab="check"><span class="n">3</span><span data-i18n="tab3"></span></button>
+</nav>
+
+<!-- TAB 1 -->
+<section class="panel" id="p-certificate">
+  <h2 data-i18n="t1_h"></h2>
+  <p class="lead" data-i18n="t1_p"></p>
+  <div class="card">
+    <div class="fields">
+      <div class="full"><label for="q" data-i18n="search"></label><input id="q" type="search" autocomplete="off"></div>
+      <div class="full"><label for="file" data-i18n="import"></label><input id="file" type="file" accept=".xlsx,.xls,.csv"><div class="hint" data-i18n="import_h"></div></div>
+    </div>
+    <div class="map" id="mapper" hidden></div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <div id="exTag"></div>
+    <div class="tablewrap"><table id="certTable"></table></div>
+    <div class="hint" id="certCount"></div>
+    <p class="note" data-i18n="tol_note"></p>
+  </div>
+</section>
+
+<!-- TAB 2 -->
+<section class="panel" id="p-expected" hidden>
+  <h2 data-i18n="t2_h"></h2>
+  <p class="lead" data-i18n="t2_p"></p>
+  <div class="grid">
+    <div class="card">
+      <h3 data-i18n="home"></h3>
+      <div class="fields">
+        <div class="full"><label for="city" data-i18n="city"></label><select id="city"></select><div class="hint" id="cityInfo"></div></div>
+        <div><label for="area" data-i18n="area"></label><input id="area" type="number" min="20" max="600" step="5" value="" placeholder="m²"></div>
+        <div><label for="qspec" data-i18n="qspec"></label><input id="qspec" type="number" min="0" step="any" value="" placeholder="kWh/m²"></div>
+        <div><label for="fuel" data-i18n="fuel"></label><select id="fuel"></select></div>
+        <div><label for="cons" id="consL"></label><input id="cons" type="number" min="0" step="10" placeholder="—"></div>
+        <div class="full hint" data-i18n="cons_h" style="margin-top:-6px"></div>
+        <div class="full" id="kwhlBox" hidden><label for="kwhl" data-i18n="kwhl"></label><input id="kwhl" type="number" min="0" step="any" value="" placeholder="kWh/L"><div class="hint" data-i18n="kwhl_h"></div></div>
+        <div><label for="eff" data-i18n="eff"></label><input id="eff" type="number" min="0.5" max="1.05" step="0.01" value="0.90"></div>
+        <div class="full"><label for="dhwOn" style="display:flex;gap:8px;align-items:center"><input id="dhwOn" type="checkbox" style="width:auto"><span data-i18n="dhw_on"></span></label></div>
+        <div id="dhwBox" class="full fields" hidden><div><label for="dhwq" data-i18n="dhwq"></label><input id="dhwq" type="number" min="0" step="any" value="" placeholder="kWh"></div><div><label for="copd" data-i18n="copd"></label><input id="copd" type="number" min="1" max="6" step="any" value="" placeholder="COP"></div><div class="full hint" data-i18n="dhw_h"></div></div>
+      </div>
+      <h3 style="margin-top:20px" data-i18n="pump"></h3>
+      <div class="fields">
+        <div><label for="scop">SCOP</label><input id="scop" type="number" min="2" max="7" step="0.01" value="3.5"></div>
+        <div><label for="ptype" data-i18n="ptype"></label><select id="ptype"></select></div>
+        <div class="full"><label for="gap" id="gapL"></label><input id="gap" type="range" min="0" max="40" step="1" value="25"><div class="hint" data-i18n="gap_h"></div></div>
+      </div>
+      <h3 style="margin-top:20px" data-i18n="prices"></h3>
+      <div class="fields">
+        <div class="full"><label for="preset" data-i18n="preset"></label><select id="preset"></select></div>
+        <div><label for="pe" data-i18n="p_el"></label><input id="pe" type="number" min="0" step="any" value="" placeholder="€/kWh"></div>
+        <div><label for="pg" data-i18n="p_gas"></label><input id="pg" type="number" min="0" step="any" value="" placeholder="€/kWh"></div>
+        <div><label for="po" data-i18n="p_oil"></label><input id="po" type="number" min="0" step="any" value="" placeholder="€/L"></div>
+      </div>
+      <div class="hint" data-i18n="prices_h"></div>
+    </div>
+    <div class="card" id="res2"></div></div><details class="card how" style="margin-top:16px"><summary data-i18n="how_h"></summary><div id="how2"></div></details><div hidden>
+  </div>
+</section>
+
+<!-- TAB 3 -->
+<section class="panel" id="p-check" hidden>
+  <h2 data-i18n="t3_h"></h2>
+  <p class="lead" data-i18n="t3_p"></p>
+  <div class="grid">
+    <div class="card">
+      <h3 data-i18n="readings"></h3>
+      <div class="fields">
+        <div class="full"><label for="mode" data-i18n="mode"></label><select id="mode"></select></div>
+        <div id="heatBox"><label for="qh" data-i18n="q_heat"></label><input id="qh" type="number" min="0" step="10" value="5200"></div>
+        <div><label for="qe" id="qeL"></label><input id="qe" type="number" min="0" step="10" value="1700"></div>
+        <div class="full"><label for="scop3">SCOP</label><input id="scop3" type="number" min="2" max="7" step="0.01"><div class="hint" data-i18n="scop3_h"></div></div>
+      </div>
+      <p class="note" data-i18n="bound_note"></p>
+    </div>
+    <div class="card" id="res3"></div></div><details class="card how" style="margin-top:16px"><summary data-i18n="how_h"></summary><div id="how3"></div></details><div hidden>
+  </div>
+</section>
+
+<footer data-i18n="foot"></footer>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+var T={
+el:{
+tag:"ΕΛΕΓΧΟΣ ΑΝΤΛΙΑΣ ΘΕΡΜΟΤΗΤΑΣ",
+hero_h:"Αποδίδει σωστά η αντλία θερμότητάς σας;",
+hero_p:"Ελέγξτε το πιστοποιητικό του μοντέλου, δείτε τι κατανάλωση και κόστος να περιμένετε στο σπίτι σας, και συγκρίνετε με τις πραγματικές σας μετρήσεις.",
+tab1:"Πιστοποιητικό",tab2:"Αναμενόμενη απόδοση",tab3:"Ελέγχω την αντλία μου",
+t1_h:"Έλεγχος πιστοποιητικού Heat Pump KEYMARK",
+t1_p:"Αναζητήστε το μοντέλο σας στη βάση πιστοποιημένων προϊόντων. Φορτώστε το αρχείο που κατεβάσατε από το keymark.eu ή δείτε τα δοκιμαστικά δεδομένα. Το εργαλείο καλύπτει αντλίες αέρα-νερού για θέρμανση χώρου. Το ζεστό νερό χρήσης δεν περιλαμβάνεται.",
+search:"Κατασκευαστής, μοντέλο ή αριθμός πιστοποιητικού",import:"Φόρτωση αρχείου Keymark (.xlsx ή .csv)",
+import_h:"Το αρχείο μένει στον υπολογιστή σας και δεν ανεβαίνει πουθενά.",
+ex_tag:"Δοκιμαστικά δεδομένα με φανταστικά μοντέλα, όχι πραγματικά προϊόντα",
+real_tag:"Δεδομένα από το αρχείο σας: ",
+c_mfr:"Κατασκευαστής",c_model:"Μοντέλο",c_scop:"SCOP",c_etas:"ηs %",c_prated:"Prated kW",c_sound:"Lw dB(A)",c_cert:"Πιστοποιητικό",c_valid:"Ισχύς έως",c_use:"Χρήση",
+use:"Χρήση στον υπολογισμό",valid:"Σε ισχύ",expired:"Έληξε",unk:"Άγνωστο",
+cnt:"εμφανίζονται {a} από {b} εγγραφές",none:"Δεν βρέθηκε αποτέλεσμα.",
+map_h:"Αντιστοίχιση στηλών",nocol:"— καμία —",
+tol_note:"Στο σύστημα KEYMARK η δηλωμένη τιμή ισχύει με ανοχή περίπου −8% στην εποχική ενεργειακή απόδοση ηs. Η τιμή του πιστοποιητικού είναι εργαστηριακή και δεν είναι η απόδοση στο σπίτι.",
+used:"Το SCOP {s} πέρασε στον υπολογισμό.",
+t2_h:"Τι να περιμένετε στο σπίτι σας",
+t2_p:"Η αναμενόμενη εποχική απόδοση (SPF) προκύπτει από το δηλωμένο SCOP μείον το τυπικό κενό απόδοσης στην πράξη.",
+home:"Το σπίτι",city:"Πόλη",area:"Εμβαδόν (m²)",ins:"Θερμομόνωση",fuel:"Σημερινό καύσιμο",eff:"Απόδοση λέβητα",
+cons_h:"Αν γνωρίζεις την ετήσια κατανάλωση καυσίμου, συμπλήρωσέ την (το αέριο σε kWh όπως στον λογαριασμό, το πετρέλαιο σε λίτρα). Αλλιώς συμπλήρωσε το εμβαδόν και την ετήσια ανάγκη θέρμανσης ανά m², π.χ. από ενεργειακή μελέτη ή πιστοποιητικό (τελική ενέργεια θέρμανσης χώρου).",
+cL_oil:"Ετήσιο πετρέλαιο (λίτρα)",cL_gas:"Ετήσιο φυσικό αέριο (kWh)",
+ins_0:"Παλιό κτίριο, χωρίς μόνωση",dhw_on:"Να συμπεριληφθεί το ζεστό νερό χρήσης",ppl:"Άτομα στο σπίτι",copd:"COP ζεστού νερού",dhw_h:"Προαιρετικό. Αν έχεις δώσει ετήσια κατανάλωση καυσίμου, θεωρούμε ότι περιλαμβάνει ήδη το ζεστό νερό και αυτή η επιλογή αγνοείται. Συμπλήρωσε την ετήσια ανάγκη ζεστού νερού και το COP ζεστού νερού από το πιστοποιητικό (πεδία DHW).",how_h:"Πώς υπολογίζεται κάθε τιμή",use_gap:"Χρήση αυτού του κενού στο βήμα 2",gap_used:"Το κενό {g}% πέρασε στο βήμα 2.",kwhl:"kWh ανά λίτρο πετρελαίου",kwhl_h:"ΤΟΤΕΕ 20701-1: κατώτερη θερμογόνος δύναμη πετρελαίου θέρμανσης 11,92 kWh/kg. Πολλαπλασίασε με την πυκνότητα του καυσίμου σου σε kg/L. Η προδιαγραφή απαιτεί να αναφέρεται η πυκνότητα και δεν ορίζει σταθερά όρια.",need_kwhl:"Συμπλήρωσε τα kWh ανά λίτρο του πετρελαίου σου για να υπολογιστούν τα αποτελέσματα.",qspec:"Ετήσια ανάγκη θέρμανσης (kWh/m²)",dhwq:"Ετήσια ανάγκη ζεστού νερού (kWh)",need_demand:"Συμπλήρωσε την ετήσια κατανάλωση καυσίμου ή το εμβαδόν μαζί με την ετήσια ανάγκη θέρμανσης (kWh/m²) για να υπολογιστούν τα αποτελέσματα.",
+how2:"<p><b>Ανάγκη θέρμανσης Q (kWh/έτος).</b> Αν δώσεις κατανάλωση: Q = κατανάλωση × απόδοση λέβητα, με το αέριο σε kWh και το πετρέλαιο σε λίτρα × kWh ανά λίτρο που δίνεις εσύ. Αλλιώς: Q = εμβαδόν × ετήσια ανάγκη θέρμανσης ανά m², όπως τη δηλώνεις εσύ.</p><p><b>Αναμενόμενο SPF.</b> SPF = SCOP × (1 − κενό απόδοσης). Το κενό είναι το ποσοστό που χάνεται στην πράξη σε σχέση με την εργαστηριακή τιμή.</p><p><b>Ρεύμα αντλίας.</b> Ρεύμα = Q / SPF. Με ζεστό νερό προστίθεται Q_ζνχ / (COP_ζνχ × (1 − κενό)), όπου Q_ζνχ και COP_ζνχ τα δίνεις εσύ. Υποθέτουμε το ίδιο κενό.</p><p><b>Κόστος.</b> Αντλία = ρεύμα × τιμή ρεύματος. Λέβητας = (Q + Q_ζνχ) / απόδοση λέβητα × τιμή καυσίμου ανά kWh (το πετρέλαιο μετατρέπεται από €/L με τα kWh ανά λίτρο που δίνεις). Όφελος = κόστος λέβητα − κόστος αντλίας.</p><p><b>SPF νεκρού σημείου.</b> Το SPF πάνω από το οποίο η αντλία κοστίζει λιγότερο: SPF = τιμή ρεύματος × απόδοση λέβητα / τιμή καυσίμου ανά kWh.</p><p><b>Σενάρια.</b> Εργαστήριο: κενό 0%. Τυπικό: το κενό που επιλέγεις. Απαισιόδοξο: κενό + 10 ποσοστιαίες μονάδες.</p>",
+how3:"<p><b>Μετρημένο SPF</b> = θερμότητα που παρήχθη / ρεύμα αντλίας για το ίδιο διάστημα.</p><p><b>Κενό από το SCOP</b> = (SCOP − SPF) / SCOP.</p><p><b>Αναμενόμενο SPF</b> = SCOP × (1 − τυπικό κενό του βήματος 2).</p><p><b>Ένδειξη.</b> Πράσινο αν το κενό είναι έως 10%. Κίτρινο έως max(τυπικό κενό, 10%) + 8 ποσοστιαίες μονάδες. Κόκκινο πάνω από αυτό. Τα όρια είναι παραδοχές του πρωτοτύπου και θα βαθμονομηθούν με τα δεδομένα της δοκιμής.</p><p><b>Μόνο ρεύμα.</b> Διαφορά = (μετρημένο ρεύμα − αναμενόμενο ρεύμα του βήματος 2) / αναμενόμενο. Πράσινο έως +10%, κίτρινο έως +30%, κόκκινο πάνω από αυτό.</p><p>Το SPF είναι εποχική τιμή. Λίγες ημέρες ή ένας ψυχρός μήνας δίνουν χαμηλότερη τιμή που δεν συγκρίνεται με το SCOP.</p>",ins_1:"Μέτρια μόνωση",ins_2:"Καλή μόνωση",
+fuel_gas:"Φυσικό αέριο",fuel_oil:"Πετρέλαιο",
+pump:"Η αντλία",ptype:"Τύπος",pt_air:"Αέρα-νερού",pt_ground:"Γεωθερμική",
+gapL:"Κενό απόδοσης: {g}%",gap_h:"Τυπική τιμή από τη βιβλιογραφία για αντλίες αέρα-νερού: περίπου 25%.",
+prices:"Τιμές ενέργειας",p_el:"Ρεύμα €/kWh",p_gas:"Φυσ. αέριο €/kWh",p_oil:"Πετρέλαιο €/L",
+prices_h:"Διάλεξε ένα σενάριο από την πτυχιακή ή συμπλήρωσε δικές σου τιμές, π.χ. από τον λογαριασμό σου ή για μελλοντικές χρονιές. Οι τιμές αλλάζουν με τον χρόνο. Το πετρέλαιο είναι σε €/λίτρο (10 kWh/L).",preset:"Σενάριο τιμών",pr_custom:"Δικές μου τιμές",pr_eu:"ΕΕ, β' εξάμηνο 2025",pr_gr25:"Ελλάδα, Σεπτέμβριος 2025",pr_gr26:"Ελλάδα, Σεπτέμβριος 2026",need_prices:"Συμπλήρωσε τις τιμές ρεύματος και καυσίμου από τον λογαριασμό σου για να δεις κόστος, όφελος και SPF νεκρού σημείου.",
+hdd:"{h} βαθμοημέρες θέρμανσης",tdes:"Θερμοκρασία σχεδιασμού χειμώνα {t} °C (DB 1%)",
+r_heat:"Ετήσια ανάγκη θέρμανσης",r_spf:"Αναμενόμενο SPF",r_el:"Ρεύμα αντλίας ανά έτος",r_save:"Ετήσιο όφελος",r_be:"SPF νεκρού σημείου",
+kwh:"kWh",eur:"€",yr:"/έτος",
+b_old:"Σημερινός λέβητας",b_hp:"Αντλία",
+scen:"Σενάρια",s_lab:"Εργαστήριο (SCOP)",s_typ:"Τυπικό στην πράξη",s_bad:"Απαισιόδοξο",
+th_sc:"Σενάριο",th_spf:"SPF",th_el:"kWh ρεύμα",th_cost:"Κόστος €",th_sav:"Όφελος €",
+be_good:"Το αναμενόμενο SPF είναι πάνω από το SPF νεκρού σημείου ({b}). Η αντλία αναμένεται να κοστίζει λιγότερο από τον λέβητα.",
+be_bad:"Το αναμενόμενο SPF είναι κάτω από το SPF νεκρού σημείου ({b}). Με αυτές τις τιμές η αντλία αναμένεται να κοστίζει περισσότερο από τον λέβητα.",
+est_note:"Τα αποτελέσματα βασίζονται στα στοιχεία που συμπληρώνεις. Δεν αντικαθιστούν ενεργειακή μελέτη.",
+t3_h:"Αποδίδει η αντλία μου όπως πρέπει;",
+t3_p:"Βάλτε τις μετρήσεις από τον μετρητή θερμότητας και τον μετρητή ρεύματος για το ίδιο διάστημα. Η σύγκριση γίνεται με το δηλωμένο SCOP και το τυπικό κενό.",
+readings:"Μετρήσεις",mode:"Τι μετράτε;",m_heat:"Έχω μετρητή θερμότητας",m_el:"Έχω μόνο ρεύμα, ετήσια τιμή",
+q_heat:"Θερμότητα που παρήχθη (kWh)",qe_a:"Ρεύμα αντλίας (kWh)",qe_b:"Ετήσιο ρεύμα αντλίας (kWh)",
+scop3_h:"Παίρνει την τιμή από το βήμα 1 ή 2. Μπορείτε να τη διορθώσετε.",
+bound_note:"Μετρήστε μόνο θέρμανση χώρου, με το ρεύμα του συμπιεστή, του ανεμιστήρα και των κυκλοφορητών. Μέτρηση λίγων ημερών ή μόνο του χειμώνα δεν είναι ετήσια. Το SPF ενός ψυχρού μήνα βγαίνει χαμηλότερο.",
+r_meas:"Μετρημένο SPF",r_gap:"Κενό από το SCOP",r_exp:"Αναμενόμενο SPF",
+v_good:"Η απόδοση είναι εντός προσδοκιών",v_warn:"Η απόδοση είναι στα τυπικά όρια της πράξης",v_bad:"Η απόδοση είναι χαμηλή, αξίζει έλεγχος",
+vd_good:"Το κενό είναι έως 10%. Είναι κοντά στη δηλωμένη τιμή.",
+vd_warn:"Το κενό είναι μεγαλύτερο από 10% αλλά όσο συνήθως βλέπουμε σε εγκαταστάσεις.",
+vd_bad:"Το κενό είναι μεγαλύτερο από το τυπικό. Δείτε τα παρακάτω σημεία.",
+g_exp:"Αναμενόμενο",g_scop:"SCOP",g_you:"Εσείς",
+tips_h:"Τι να ελέγξετε",
+tip1:"Θερμοκρασία προσαγωγής: κάθε βαθμός χαμηλότερα βελτιώνει το SPF. Δείτε την καμπύλη θέρμανσης.",
+tip2:"Συχνές εκκινήσεις και στάσεις του συμπιεστή δείχνουν υπερδιαστασιολόγηση ή λάθος ρύθμιση.",
+tip3:"Απόψυξη και θερμαντικό στοιχείο βοηθείας: δείτε πόσο ρεύμα πάει σε αυτά τον χειμώνα.",
+tip4:"Υδραυλικό σύστημα: ΔΤ προσαγωγής-επιστροφής και ροή κυκλοφορητή.",
+tip5:"Ζεστό νερό χρήσης: αν περιλαμβάνεται στο ρεύμα αλλά όχι στη θερμότητα, το SPF βγαίνει χαμηλότερο.",
+el_note:"Χωρίς μετρητή θερμότητας το SPF δεν υπολογίζεται. Συγκρίνουμε το ετήσιο ρεύμα σας με το αναμενόμενο από το βήμα 2.",
+r_elm:"Μετρημένο ρεύμα",r_ele:"Αναμενόμενο ρεύμα",r_diff:"Διαφορά",
+foot:"Ερευνητικό πρωτότυπο, μέρος διπλωματικής εργασίας ΑΠΘ για την αξιολόγηση της απόδοσης αντλιών θερμότητας. Δεν προορίζεται για εμπορική χρήση. Οι εκτιμήσεις βασίζονται σε βιβλιογραφικές τιμές και δεν αντικαθιστούν ενεργειακή μελέτη ή επιθεώρηση."
+},
+en:{
+tag:"HEAT PUMP CHECK",
+hero_h:"Is your heat pump performing as it should?",
+hero_p:"Check your model's certificate, see the consumption and cost to expect in your home, and compare with your own meter readings.",
+tab1:"Certificate",tab2:"Expected performance",tab3:"Check my pump",
+t1_h:"Heat Pump KEYMARK certificate check",
+t1_p:"Look up your model in the certified products database. Load the file you downloaded from keymark.eu, or browse the sample data. The tool covers air-to-water heat pumps for space heating. Domestic hot water is not included.",
+search:"Manufacturer, model or certificate number",import:"Load Keymark file (.xlsx or .csv)",
+import_h:"The file stays on your computer and is not uploaded anywhere.",
+ex_tag:"Sample data with fictional models, not real products",
+real_tag:"Data from your file: ",
+c_mfr:"Manufacturer",c_model:"Model",c_scop:"SCOP",c_etas:"ηs %",c_prated:"Prated kW",c_sound:"Lw dB(A)",c_cert:"Certificate",c_valid:"Valid until",c_use:"Use",
+use:"Use in calculator",valid:"Valid",expired:"Expired",unk:"Unknown",
+cnt:"showing {a} of {b} records",none:"No match found.",
+map_h:"Column mapping",nocol:"— none —",
+tol_note:"Under KEYMARK the declared seasonal space heating efficiency ηs is accepted with a tolerance of about −8%. The certificate value is a laboratory figure, not the performance in your home.",
+used:"SCOP {s} sent to the calculator.",
+t2_h:"What to expect in your home",
+t2_p:"Expected seasonal performance (SPF) is the declared SCOP minus the typical field performance gap.",
+home:"Your home",city:"City",area:"Floor area (m²)",ins:"Insulation",fuel:"Current fuel",eff:"Boiler efficiency",
+cons_h:"If you know your yearly fuel consumption, enter it (gas in kWh as on your bill, oil in litres). Otherwise enter floor area and yearly heating demand per m², for example from an energy audit or certificate (final energy for space heating).",
+cL_oil:"Yearly heating oil (litres)",cL_gas:"Yearly natural gas (kWh)",
+ins_0:"Older building, no insulation",dhw_on:"Include domestic hot water",ppl:"People in the home",copd:"Hot water COP",dhw_h:"Optional. If you entered yearly fuel consumption, it is assumed to include hot water already and this option is ignored. Enter yearly hot water demand and the hot water COP from the certificate (DHW fields).",how_h:"How each value is calculated",use_gap:"Use this gap in step 2",gap_used:"Gap {g}% sent to step 2.",kwhl:"kWh per litre of heating oil",kwhl_h:"TOTEE 20701-1: lower calorific value of heating oil 11.92 kWh/kg. Multiply by the density of your fuel in kg/L. The specification requires density to be reported and sets no fixed limits.",need_kwhl:"Enter the kWh per litre of your heating oil to see results.",qspec:"Yearly heating demand (kWh/m²)",dhwq:"Yearly hot water demand (kWh)",need_demand:"Enter your yearly fuel consumption, or floor area together with yearly heating demand (kWh/m²), to see results.",
+how2:"<p><b>Heat demand Q (kWh/year).</b> If you enter consumption: Q = consumption × boiler efficiency, with gas in kWh and oil in litres × the kWh per litre you enter. Otherwise: Q = floor area × yearly heating demand per m², as you enter it.</p><p><b>Expected SPF.</b> SPF = SCOP × (1 − performance gap). The gap is the share lost in the field compared with the laboratory value.</p><p><b>Pump electricity.</b> Electricity = Q / SPF. With hot water selected, Q_dhw / (COP_dhw × (1 − gap)) is added, where Q_dhw and COP_dhw are entered by you. The same gap is assumed.</p><p><b>Cost.</b> Pump = electricity × electricity price. Boiler = (Q + Q_dhw) / boiler efficiency × fuel price per kWh (oil is converted from €/L with the kWh per litre you enter). Saving = boiler cost − pump cost.</p><p><b>Break-even SPF.</b> The SPF above which the pump costs less: SPF = electricity price × boiler efficiency / fuel price per kWh.</p><p><b>Scenarios.</b> Laboratory: gap 0%. Typical: your selected gap. Pessimistic: gap + 10 percentage points.</p>",
+how3:"<p><b>Measured SPF</b> = heat produced / pump electricity over the same period.</p><p><b>Gap from SCOP</b> = (SCOP − SPF) / SCOP.</p><p><b>Expected SPF</b> = SCOP × (1 − typical gap from step 2).</p><p><b>Indicator.</b> Green if the gap is up to 10%. Yellow if up to max(typical gap, 10%) + 8 percentage points. Red above that. The thresholds are prototype assumptions and will be calibrated with the field test data.</p><p><b>Electricity only.</b> Difference = (measured electricity − expected electricity from step 2) / expected. Green up to +10%, yellow up to +30%, red above.</p><p>SPF is a seasonal value. A few days or one cold month gives a lower figure and cannot be compared with SCOP.</p>",ins_1:"Moderate insulation",ins_2:"Good insulation",
+fuel_gas:"Natural gas",fuel_oil:"Heating oil",
+pump:"Your pump",ptype:"Type",pt_air:"Air-to-water",pt_ground:"Ground source",
+gapL:"Performance gap: {g}%",gap_h:"Typical literature value for air-to-water pumps: about 25%.",
+prices:"Energy prices",p_el:"Electricity €/kWh",p_gas:"Gas €/kWh",p_oil:"Oil €/L",
+prices_h:"Pick a scenario from the thesis or enter your own prices, for example from your bill or for a future year. Prices change over time. Oil is in €/litre (10 kWh/L).",preset:"Price scenario",pr_custom:"My own prices",pr_eu:"EU, H2 2025",pr_gr25:"Greece, September 2025",pr_gr26:"Greece, September 2026",need_prices:"Enter your electricity and fuel prices from your bill to see cost, saving and break-even SPF.",
+hdd:"{h} heating degree-days",tdes:"Winter design temperature {t} °C (DB 1%)",
+r_heat:"Yearly heat demand",r_spf:"Expected SPF",r_el:"Pump electricity per year",r_save:"Yearly saving",r_be:"Break-even SPF",
+kwh:"kWh",eur:"€",yr:"/yr",
+b_old:"Current boiler",b_hp:"Heat pump",
+scen:"Scenarios",s_lab:"Laboratory (SCOP)",s_typ:"Typical in the field",s_bad:"Pessimistic",
+th_sc:"Scenario",th_spf:"SPF",th_el:"kWh electricity",th_cost:"Cost €",th_sav:"Saving €",
+be_good:"Expected SPF is above the break-even SPF ({b}). The pump is expected to cost less than your boiler.",
+be_bad:"Expected SPF is below the break-even SPF ({b}). At these prices the pump is expected to cost more than your boiler.",
+est_note:"Results rely on the figures you enter. They do not replace an energy audit.",
+t3_h:"Is my pump performing correctly?",
+t3_p:"Enter readings from your heat meter and electricity meter for the same period. The result is compared with the declared SCOP and the typical gap.",
+readings:"Readings",mode:"What can you measure?",m_heat:"I have a heat meter",m_el:"Electricity only, yearly value",
+q_heat:"Heat produced (kWh)",qe_a:"Pump electricity (kWh)",qe_b:"Yearly pump electricity (kWh)",
+scop3_h:"Taken from step 1 or 2. You can correct it.",
+bound_note:"Measure space heating only, with compressor, fan and circulation pump electricity. A few days or only winter is not a full year. A cold month gives a lower SPF.",
+r_meas:"Measured SPF",r_gap:"Gap from SCOP",r_exp:"Expected SPF",
+v_good:"Performance is within expectations",v_warn:"Performance is within the typical field range",v_bad:"Performance is low, worth checking",
+vd_good:"The gap is up to 10%. This is close to the declared value.",
+vd_warn:"The gap is above 10% but in line with what field studies usually show.",
+vd_bad:"The gap is larger than typical. See the points below.",
+g_exp:"Expected",g_scop:"SCOP",g_you:"You",
+tips_h:"What to check",
+tip1:"Flow temperature: every degree lower improves SPF. Review the heating curve.",
+tip2:"Frequent compressor starts and stops point to oversizing or a wrong setting.",
+tip3:"Defrost and backup heater: see how much electricity goes to them in winter.",
+tip4:"Hydraulics: flow-return temperature difference and circulation pump flow.",
+tip5:"Domestic hot water: if it is in the electricity reading but not in the heat reading, SPF comes out lower.",
+el_note:"Without a heat meter SPF cannot be calculated. Your yearly electricity is compared with the expected value from step 2.",
+r_elm:"Measured electricity",r_ele:"Expected electricity",r_diff:"Difference",
+foot:"Research prototype, part of an AUTh diploma thesis on heat pump performance evaluation. Not intended for commercial use. Estimates rely on literature values and do not replace an energy audit or inspection."
+}};
+
+var CITIES=[
+["ath","Αθήνα (Ελληνικό)","Athens (Elliniko)",947,3.0],["phi","Αθήνα (Φιλαδέλφεια)","Athens (Filadelfeia)",1186,2.5],["the","Θεσσαλονίκη","Thessaloniki",1677,-2.0],["ioa","Ιωάννινα","Ioannina",1937,-4.5],
+["her","Ηράκλειο","Heraklion",702,7.0],["pat","Πάτρα","Patras",1008,null],["lar","Λάρισα","Larissa",1718,-4.5],
+["koz","Κοζάνη","Kozani",2337,null],["alx","Αλεξανδρούπολη","Alexandroupoli",1815,-4.0],["cha","Χανιά","Chania",781,6.0],
+["rho","Ρόδος","Rhodes",702,7.5],["flo","Φλώρινα","Florina",2537,null],["kav","Καβάλα","Kavala",1790,-2.5],
+["ser","Σέρρες","Serres",1865,-4.0],["tri","Τρίπολη","Tripoli",1967,null],["kal","Καλαμάτα","Kalamata",1004,2.0],
+["lam","Λαμία","Lamia",1449,-1.0],["chk","Χαλκίδα","Chalkida",1130,null],["kom","Κομοτηνή","Komotini",1821,null],
+["xan","Ξάνθη","Xanthi",1670,null],["dra","Δράμα","Drama",1746,null],["ede","Έδεσσα","Edessa",1857,null],
+["kar","Καρδίτσα","Karditsa",1810,null],["trk","Τρίκαλα","Trikala",1665,null],["arg","Άργος","Argos",1327,null],
+["spa","Σπάρτη","Sparta",1080,null],["agr","Αγρίνιο","Agrinio",1237,null],["art","Άρτα","Arta",1313,null],
+["myt","Μυτιλήνη","Mytilene",1080,null],["chi","Χίος","Chios",1123,null],["syr","Σύρος","Syros",790,null],
+["nax","Νάξος","Naxos",735,7.5],["kos","Κως","Kos",952,null],["cor","Κέρκυρα","Corfu",1074,1.5]
+];
+var SAMPLE=[
+["Example Brand A","EX-A 6 air/water","4.62",182,6,52,"EX-001","2027-03-31"],
+["Example Brand A","EX-A 10 air/water","4.38",172,10,56,"EX-002","2027-03-31"],
+["Example Brand B","EX-B 8 monobloc","4.85",190,8,54,"EX-014","2026-06-30"],
+["Example Brand B","EX-B 12 monobloc","4.51",177,12,58,"EX-015","2028-01-15"],
+["Example Brand C","EX-C 9 ground/water","5.60",218,9,44,"EX-107","2027-11-30"],
+["Example Brand C","EX-C 14 ground/water","5.42",211,14,46,"EX-108","2026-02-28"]
+].map(function(r){return{mfr:r[0],model:r[1],scop:r[2],etas:r[3],prated:r[4],sound:r[5],cert:r[6],valid:r[7]}});
+
+var $=function(i){return document.getElementById(i)};
+var lang="el",tab="certificate",data=SAMPLE,isSample=true,fileName="",gapTouched=false,scop3Touched=false;
+var E={heat:{oil:10.0,gas:10.0},eff:{gas:0.90,oil:0.85}};
+var KF={ins:[0.12,0.08,0.045]};
+function t(k,r){var s=(T[lang][k]!==undefined?T[lang][k]:k);if(r)for(var x in r)s=s.replace("{"+x+"}",r[x]);return s}
+function fmt(n,d){return Number(n).toLocaleString(lang==="el"?"el-GR":"en-GB",{maximumFractionDigits:d===undefined?0:d,minimumFractionDigits:d===undefined?0:d})}
+function toast(m){var el=$("toast");el.textContent=m;el.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(function(){el.hidden=true},2600)}
+function store(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+function load(k){try{return localStorage.getItem(k)}catch(e){return null}}
+
+/* ---------- i18n ---------- */
+function applyLang(){
+  document.documentElement.lang=lang;
+  document.querySelectorAll("[data-i18n]").forEach(function(el){el.textContent=t(el.getAttribute("data-i18n"))});
+  $("lg-el").setAttribute("aria-pressed",lang==="el");$("lg-en").setAttribute("aria-pressed",lang==="en");
+  
+  fillSelect("fuel",["gas","oil"].map(function(i){return t("fuel_"+i)}),$("fuel").value||"0",["gas","oil"]);
+  fillSelect("ptype",[t("pt_air")],"air",["air"]);
+  fillSelect("mode",[t("m_heat"),t("m_el")],$("mode").value||"0",["heat","el"]);
+  fillSelect("preset",[t("pr_custom"),t("pr_eu"),t("pr_gr25"),t("pr_gr26")],$("preset").value||"custom",["custom","eu25","gr25","gr26"]);
+  var cs=$("city"),cur=cs.value||"ath";cs.innerHTML="";
+  CITIES.slice().sort(function(a,b){return (lang==="el"?a[1]:a[2]).localeCompare(lang==="el"?b[1]:b[2],lang)}).forEach(function(c){
+    var o=document.createElement("option");o.value=c[0];o.textContent=lang==="el"?c[1]:c[2];cs.appendChild(o)});
+  cs.value=cur;$("how2").innerHTML=t("how2");$("how3").innerHTML=t("how3");
+  renderAll();
+}
+function fillSelect(id,labels,sel,vals){
+  var s=$(id);s.innerHTML="";
+  labels.forEach(function(l,i){var o=document.createElement("option");o.value=vals?vals[i]:String(i);o.textContent=l;s.appendChild(o)});
+  s.value=vals&&vals.indexOf(sel)<0&&vals[+sel]?vals[+sel]:sel;
+}
+
+/* ---------- tabs ---------- */
+function setTab(n){
+  tab=n;
+  ["certificate","expected","check"].forEach(function(k){
+    $("p-"+k).hidden=(k!==n);$("tb-"+k).setAttribute("aria-selected",k===n);
+  });
+  try{history.replaceState(null,"","#"+n)}catch(e){location.hash=n}
+  renderAll();
+}
+
+/* ---------- tab 1 ---------- */
+function validState(v){
+  if(v===undefined||v===null||v==="")return "unk";
+  var d;
+  if(typeof v==="number"&&v>20000)d=new Date(Math.round((v-25569)*86400000));
+  else{d=new Date(v);if(isNaN(d)){var m=String(v).match(/(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{4})/);d=m?new Date(+m[3],+m[2]-1,+m[1]):d}}
+  if(isNaN(d))return "unk";
+  return d<new Date()?"expired":"valid";
+}
+function num(v){var n=parseFloat(String(v).replace(",","."));return isNaN(n)?null:n}
+function renderCerts(){
+  var q=$("q").value.trim().toLowerCase();
+  var rows=data.filter(function(r){return !q||((r.mfr||"")+" "+(r.model||"")+" "+(r.cert||"")).toLowerCase().indexOf(q)>=0});
+  $("exTag").innerHTML=isSample?'<span class="example">'+t("ex_tag")+'</span>':'<span class="pill good">'+t("real_tag")+escapeH(fileName)+'</span>';
+  var head=["c_mfr","c_model","c_scop","c_etas","c_prated","c_sound","c_cert","c_valid"];
+  var h="<tr>"+head.map(function(k,i){return "<th"+(i>=2&&i<=5?' class="num"':"")+">"+t(k)+"</th>"}).join("")+"<th></th></tr>";
+  var shown=rows.slice(0,50);
+  var body=shown.map(function(r,i){
+    var vs=validState(r.valid),lab=vs==="valid"?t("valid"):vs==="expired"?t("expired"):t("unk");
+    return "<tr><td>"+escapeH(r.mfr)+"</td><td>"+escapeH(r.model)+'</td><td class="num">'+escapeH(r.scop)+'</td><td class="num">'+escapeH(r.etas)+'</td><td class="num">'+escapeH(r.prated)+'</td><td class="num">'+escapeH(r.sound)+"</td><td>"+escapeH(r.cert)+"</td><td>"+escapeH(r.valid)+' <span class="pill '+(vs==="valid"?"good":vs==="expired"?"bad":"neutral")+'">'+lab+'</span></td><td><button class="btn small ghost" data-use="'+data.indexOf(r)+'">'+t("use")+"</button></td></tr>"
+  }).join("");
+  $("certTable").innerHTML=h+(shown.length?body:'<tr><td colspan="9">'+t("none")+"</td></tr>");
+  $("certCount").textContent=t("cnt",{a:shown.length,b:rows.length});
+}
+function escapeH(s){return String(s===undefined||s===null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+
+/* import */
+var raw=null;
+var GUESS={mfr:/manufact|brand|holder|company|εταιρ/i,model:/model|type|product|name|μοντέλο/i,scop:/scop/i,etas:/η\s*s|etas|eta_s|seasonal.*effic/i,prated:/prated|rated.*(output|capacity)|capacity/i,sound:/sound|\blw\b|noise/i,cert:/certificate|licen|cert/i,valid:/valid|expir|until|date/i};
+var FIELDS=["mfr","model","scop","etas","prated","sound","cert","valid"];
+function onFile(ev){
+  var f=ev.target.files[0];if(!f)return;
+  var rd=new FileReader();
+  rd.onload=function(){
+    try{
+      var wb=XLSX.read(rd.result,{type:"array"});
+      var ws=wb.Sheets[wb.SheetNames[0]];
+      var rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:""});
+      var hi=0;for(var i=0;i<rows.length;i++){if(rows[i].filter(function(c){return String(c).trim()!==""}).length>=3){hi=i;break}}
+      raw={head:rows[hi].map(String),rows:rows.slice(hi+1),name:f.name};
+      buildMapper();applyMap();
+    }catch(e){toast("Error: "+e.message)}
+  };
+  rd.readAsArrayBuffer(f);
+}
+function buildMapper(){
+  var m=$("mapper");m.hidden=false;m.innerHTML="";
+  FIELDS.forEach(function(k){
+    var d=document.createElement("div");
+    var l=document.createElement("label");l.textContent=t("c_"+k);l.htmlFor="map-"+k;
+    var s=document.createElement("select");s.id="map-"+k;
+    var o0=document.createElement("option");o0.value="-1";o0.textContent=t("nocol");s.appendChild(o0);
+    var guess=-1;
+    raw.head.forEach(function(h,i){var o=document.createElement("option");o.value=i;o.textContent=h||("#"+(i+1));s.appendChild(o);if(guess<0&&GUESS[k].test(h))guess=i});
+    s.value=guess;s.onchange=applyMap;d.appendChild(l);d.appendChild(s);m.appendChild(d);
+  });
+}
+function applyMap(){
+  var idx={};FIELDS.forEach(function(k){idx[k]=+$("map-"+k).value});
+  data=raw.rows.filter(function(r){return r.some(function(c){return String(c).trim()!==""})}).map(function(r){
+    var o={};FIELDS.forEach(function(k){o[k]=idx[k]>=0?r[idx[k]]:""});return o});
+  isSample=false;fileName=raw.name;renderCerts();
+}
+
+/* ---------- engine ---------- */
+function city(){return CITIES.filter(function(c){return c[0]===$("city").value})[0]||CITIES[0]}
+function calc(){
+  var scop=+$("scop").value||3.5,gap=(+$("gap").value||0)/100,fuel=$("fuel").value||"gas";
+  var kwhl=+$("kwhl").value||0,eff=+$("eff").value||0.9,pe=+$("pe").value,pf=fuel==="gas"?+$("pg").value:(kwhl>0?+$("po").value/kwhl:0);
+  var cons=num($("cons").value),Q;
+  if(cons&&cons>0)Q=cons*(fuel==="gas"?1:kwhl)*eff;
+  else Q=(+$("area").value||0)*(+$("qspec").value||0);
+  var dOn=$("dhwOn").checked&&!(cons&&cons>0),copd=+$("copd").value||0,Qd=(dOn&&copd>0)?(+$("dhwq").value||0):0;
+  var boiler=(Q+Qd)/eff*pf,be=pe*eff/pf;
+  function sc(g){var spf=scop*(1-g),el=Q/spf+(Qd>0?Qd/(copd*(1-g)):0),cost=el*pe;return{g:g,spf:spf,el:el,cost:cost,sav:boiler-cost}}
+  return{scop:scop,gap:gap,fuel:fuel,eff:eff,pe:pe,pf:pf,Q:Q+Qd,boiler:boiler,be:be,measured:!!(cons&&cons>0),needKwhl:(fuel==="oil"&&!(kwhl>0)),
+    lab:sc(0),typ:sc(gap),bad:sc(Math.min(gap+0.10,0.6))};
+}
+function renderExpected(){
+  var c=city(),r=calc(),f=r.fuel;
+  $("dhwBox").hidden=!$("dhwOn").checked;
+  $("gapL").textContent=t("gapL",{g:Math.round(r.gap*100)});
+  $("consL").textContent=t(f==="oil"?"cL_oil":"cL_gas");$("kwhlBox").hidden=(f!=="oil");
+  $("cityInfo").textContent=t("hdd",{h:fmt(c[3])})+(c[4]!==null?" · "+t("tdes",{t:fmt(c[4],1)}):"");
+  if(!(r.Q>0)){$("res2").innerHTML='<div class="verdict warn"><span>'+t(r.needKwhl&&r.measured?"need_kwhl":"need_demand")+"</span></div>";return}
+  if(!(r.pe>0&&r.pf>0)){var s0=r.typ;$("res2").innerHTML='<div class="kpis"><div class="kpi main"><div class="v">'+fmt(s0.spf,2)+'</div><div class="l">'+t("r_spf")+'</div></div><div class="kpi"><div class="v">'+fmt(r.Q)+'</div><div class="l">'+t("r_heat")+" ("+t("kwh")+")</div></div><div class=\"kpi\"><div class=\"v\">"+fmt(s0.el)+'</div><div class="l">'+t("r_el")+" ("+t("kwh")+")</div></div></div><div class=\"verdict warn\"><span>"+t(r.needKwhl?"need_kwhl":"need_prices")+'</span></div><p class="note">'+t("est_note")+"</p>";return}
+  var s=r.typ,mx=Math.max(r.boiler,s.cost,1);
+  var verdictOk=s.spf>r.be;
+  var rows=[["s_lab",r.lab],["s_typ",r.typ],["s_bad",r.bad]].map(function(x){
+    return "<tr><td>"+t(x[0])+'</td><td class="num">'+fmt(x[1].spf,2)+'</td><td class="num">'+fmt(x[1].el)+'</td><td class="num">'+fmt(x[1].cost)+'</td><td class="num">'+fmt(x[1].sav)+"</td></tr>"}).join("");
+  $("res2").innerHTML=
+   '<div class="kpis"><div class="kpi main"><div class="v">'+fmt(s.spf,2)+'</div><div class="l">'+t("r_spf")+'</div></div>'+
+   '<div class="kpi"><div class="v">'+fmt(r.Q)+'</div><div class="l">'+t("r_heat")+" ("+t("kwh")+")</div></div>"+
+   '<div class="kpi"><div class="v">'+fmt(s.el)+'</div><div class="l">'+t("r_el")+" ("+t("kwh")+")</div></div>"+
+   '<div class="kpi"><div class="v" style="color:var(--'+(s.sav>=0?"good":"bad")+')">'+fmt(s.sav)+" €</div><div class=\"l\">"+t("r_save")+"</div></div>"+
+   '<div class="kpi"><div class="v">'+fmt(r.be,2)+'</div><div class="l">'+t("r_be")+"</div></div></div>"+
+   '<div class="bars"><div class="bar-row"><span>'+t("b_old")+'</span><div class="track"><div class="fill" style="width:'+(r.boiler/mx*100)+'%;background:var(--heat)"></div></div><span class="val">'+fmt(r.boiler)+" €</span></div>"+
+   '<div class="bar-row"><span>'+t("b_hp")+'</span><div class="track"><div class="fill" style="width:'+(Math.max(s.cost,0)/mx*100)+'%;background:var(--accent)"></div></div><span class="val">'+fmt(s.cost)+" €</span></div></div>"+
+   '<div class="verdict '+(verdictOk?"good":"bad")+'"><span>'+t(verdictOk?"be_good":"be_bad",{b:fmt(r.be,2)})+"</span></div>"+
+   '<h3>'+t("scen")+'</h3><div class="tablewrap"><table><tr><th>'+t("th_sc")+'</th><th class="num">'+t("th_spf")+'</th><th class="num">'+t("th_el")+'</th><th class="num">'+t("th_cost")+'</th><th class="num">'+t("th_sav")+"</th></tr>"+rows+"</table></div>"+
+   '<p class="note">'+t("est_note")+"</p>";
+}
+function renderCheck(){
+  var mode=$("mode").value||"heat";
+  $("heatBox").hidden=(mode!=="heat");
+  $("qeL").textContent=t(mode==="heat"?"qe_a":"qe_b");
+  var scop=+$("scop3").value||3.5,e=+$("qe").value,h=+$("qh").value,x=calc(),out="";
+  if(mode==="heat"){
+    if(!(e>0&&h>0)){$("res3").innerHTML="";return}
+    var spf=h/e,gap=(scop-spf)/scop,exp=scop*(1-x.gap);
+    var thr=Math.max(x.gap,0.10)+0.08;
+    var cls=gap<=0.10?"good":gap<=thr?"warn":"bad";
+    var max=Math.max(scop*1.1,spf*1.1,2),min=1;
+    function pos(v){return Math.min(100,Math.max(0,(v-min)/(max-min)*100))}
+    out='<div class="kpis"><div class="kpi main"><div class="v">'+fmt(spf,2)+'</div><div class="l">'+t("r_meas")+'</div></div>'+
+      '<div class="kpi"><div class="v">'+fmt(gap*100,0)+'%</div><div class="l">'+t("r_gap")+'</div></div>'+
+      '<div class="kpi"><div class="v">'+fmt(exp,2)+'</div><div class="l">'+t("r_exp")+"</div></div></div>"+
+      '<div class="verdict '+cls+'"><b>'+t("v_"+cls)+"</b><span>"+t("vd_"+cls)+"</span></div>"+'<button class="btn" id="useGap" data-gap="'+(gap*100)+'" data-scop="'+scop+'" style="margin-bottom:14px">'+t("use_gap")+"</button>"+
+      '<div class="gauge"><div class="mk dn" style="left:'+pos(exp)+'%"><span>'+t("g_exp")+" "+fmt(exp,2)+'</span></div><div class="mk up" style="left:'+pos(scop)+'%"><span>'+t("g_scop")+" "+fmt(scop,2)+'</span></div><div class="mk you up" style="left:'+pos(spf)+'%;"><span style="color:var(--heat);top:-32px">'+t("g_you")+" "+fmt(spf,2)+"</span></div></div>";
+    if(cls!=="good")out+='<h3>'+t("tips_h")+'</h3><ul class="tips">'+[1,2,3,4,5].map(function(i){return "<li>"+t("tip"+i)+"</li>"}).join("")+"</ul>";
+  }else{
+    if(!(e>0)){$("res3").innerHTML="";return}
+    if(!(x.typ.el>0)){$("res3").innerHTML='<div class="verdict warn"><span>'+t("need_demand")+"</span></div>";return}
+    var ee=x.typ.el,d=(e-ee)/ee,cls2=d<=0.10?"good":d<=0.30?"warn":"bad";
+    out='<div class="kpis"><div class="kpi main"><div class="v">'+fmt(e)+'</div><div class="l">'+t("r_elm")+" ("+t("kwh")+')</div></div><div class="kpi"><div class="v">'+fmt(ee)+'</div><div class="l">'+t("r_ele")+" ("+t("kwh")+')</div></div><div class="kpi"><div class="v">'+(d>0?"+":"")+fmt(d*100)+'%</div><div class="l">'+t("r_diff")+"</div></div></div>"+
+      '<div class="verdict '+cls2+'"><b>'+t("v_"+cls2)+"</b><span>"+t("el_note")+"</span></div>";
+    if(cls2!=="good")out+='<h3>'+t("tips_h")+'</h3><ul class="tips">'+[1,2,3,4].map(function(i){return "<li>"+t("tip"+i)+"</li>"}).join("")+"</ul>";
+  }
+  $("res3").innerHTML=out;
+}
+function renderAll(){
+  if(tab==="certificate")renderCerts();
+  if(tab==="expected")renderExpected();
+  if(tab==="check"){if(!scop3Touched)$("scop3").value=$("scop").value;renderCheck()}
+}
+
+/* ---------- events ---------- */
+$("lg-el").onclick=function(){lang="el";store("pc-lang","el");applyLang()};
+$("lg-en").onclick=function(){lang="en";store("pc-lang","en");applyLang()};
+document.querySelectorAll("nav.tabs button").forEach(function(b){b.onclick=function(){setTab(b.getAttribute("data-tab"))}});
+$("q").oninput=renderCerts;$("file").onchange=onFile;
+$("certTable").onclick=function(ev){
+  var b=ev.target.closest("[data-use]");if(!b)return;
+  var r=data[+b.getAttribute("data-use")],s=num(r.scop);
+  if(s){$("scop").value=s;scop3Touched=false;toast(t("used",{s:fmt(s,2)}));setTab("expected")}
+};
+["city","area","qspec","fuel","cons","eff","scop","pe","pg","po","gap","dhwOn","dhwq","copd","kwhl"].forEach(function(id){
+  $(id).addEventListener("input",function(){
+    if(id==="gap")gapTouched=true;
+    if(id==="fuel"){$("eff").value=E.eff[$("fuel").value]}
+    if(id==="scop")scop3Touched=false;
+    renderAll();
+  });
+});
+$("res3").onclick=function(ev){var b=ev.target.closest("#useGap");if(!b)return;var g=Math.min(40,Math.max(0,Math.round(+b.getAttribute("data-gap"))));$("gap").value=g;$("scop").value=b.getAttribute("data-scop");scop3Touched=false;toast(t("gap_used",{g:g}));setTab("expected")};
+var PRESETS={eu25:[0.2896,0.1228,null],gr25:[0.170,0.0787,1.02],gr26:[0.25,0.110,1.79]};
+$("preset").onchange=function(){var p=PRESETS[$("preset").value];if(p){$("pe").value=p[0];$("pg").value=p[1];if(p[2]!==null)$("po").value=p[2]}renderAll()};
+["pe","pg","po"].forEach(function(id){$(id).addEventListener("input",function(){$("preset").value="custom"})});
+$("ptype").onchange=function(){if(!gapTouched||true){$("gap").value=$("ptype").value==="ground"?17:25;gapTouched=false}renderAll()};
+["mode","qh","qe","scop3"].forEach(function(id){$(id).addEventListener("input",function(){if(id==="scop3")scop3Touched=true;renderAll()})});
+window.addEventListener("hashchange",function(){var h=location.hash.slice(1);if(["certificate","expected","check"].indexOf(h)>=0&&h!==tab)setTab(h)});
+
+/* ---------- start ---------- */
+(function(){
+  var l=load("pc-lang");if(l==="en")lang="en";
+  applyLang();
+  var h=location.hash.slice(1);setTab(["certificate","expected","check"].indexOf(h)>=0?h:"certificate");
+})();
+</script>
+
+</body>
+</html>
