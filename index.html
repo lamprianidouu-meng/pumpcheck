@@ -71,6 +71,7 @@ table{border-collapse:collapse;width:100%;font-size:13.5px;font-variant-numeric:
 th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
 th{font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
 td.num,th.num{text-align:right}
+.src{margin:-4px 0 10px}
 .pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600}
 .pill.good{background:var(--good-bg);color:var(--good)}.pill.warn{background:var(--warn-bg);color:var(--warn)}.pill.bad{background:var(--bad-bg);color:var(--bad)}.pill.neutral{background:var(--bg);color:var(--muted)}
 .note{font-size:12.5px;color:var(--muted);border-left:3px solid var(--line);padding:2px 0 2px 10px;margin:12px 0 0}
@@ -144,6 +145,7 @@ footer{margin-top:36px;color:var(--muted);font-size:12.5px;border-top:1px solid 
   <div class="grid">
     <div class="card">
       <h3 data-i18n="home"></h3>
+      <p class="src"><span class="pill neutral" data-i18n="src_user"></span></p>
       <div class="fields">
         <div class="full"><label for="city" data-i18n="city"></label><select id="city"></select><div class="hint" id="cityInfo"></div></div>
         <div><label for="area" data-i18n="area"></label><input id="area" type="number" min="20" max="600" step="5" value="" placeholder="m²"></div>
@@ -153,13 +155,17 @@ footer{margin-top:36px;color:var(--muted);font-size:12.5px;border-top:1px solid 
         <div class="full hint" data-i18n="cons_h" style="margin-top:-6px"></div>
         <div class="full" id="kwhlBox" hidden><label for="kwhl" data-i18n="kwhl"></label><input id="kwhl" type="number" min="0" step="any" value="" placeholder="kWh/L"><div class="hint" data-i18n="kwhl_h"></div></div>
         <div><label for="eff" data-i18n="eff"></label><input id="eff" type="number" min="0.5" max="1.05" step="0.01" value="0.90"></div>
-        <div class="full"><label for="dhwOn" style="display:flex;gap:8px;align-items:center"><input id="dhwOn" type="checkbox" style="width:auto"><span data-i18n="dhw_on"></span></label></div>
-        <div id="dhwBox" class="full fields" hidden><div><label for="dhwq" data-i18n="dhwq"></label><input id="dhwq" type="number" min="0" step="any" value="" placeholder="kWh"></div><div><label for="copd" data-i18n="copd"></label><input id="copd" type="number" min="1" max="6" step="any" value="" placeholder="COP"></div><div class="full hint" data-i18n="dhw_h"></div></div>
       </div>
       <h3 style="margin-top:20px" data-i18n="pump"></h3>
+      <p class="src"><span class="pill good" data-i18n="src_cert"></span></p>
       <div class="fields">
-        <div><label for="scop">SCOP</label><input id="scop" type="number" min="2" max="7" step="0.01" value="3.5"></div>
-        <div><label for="ptype" data-i18n="ptype"></label><select id="ptype"></select></div>
+        <div><label for="scop" data-i18n="scop_l"></label><input id="scop" type="number" min="2" max="7" step="0.01" value="3.5"></div>
+        <div><label for="zone" data-i18n="zone"></label><select id="zone"></select></div>
+        <div><label for="atemp" data-i18n="atemp"></label><select id="atemp"></select></div>
+        <div class="full hint" data-i18n="zone_h"></div>
+      </div>
+      <p class="src" style="margin-top:14px"><span class="pill warn" data-i18n="src_assume"></span></p>
+      <div class="fields">
         <div class="full"><label for="gap" id="gapL"></label><input id="gap" type="range" min="0" max="40" step="1" value="25"><div class="hint" data-i18n="gap_h"></div></div>
       </div>
       <h3 style="margin-top:20px" data-i18n="prices"></h3>
@@ -182,11 +188,16 @@ footer{margin-top:36px;color:var(--muted);font-size:12.5px;border-top:1px solid 
   <div class="grid">
     <div class="card">
       <h3 data-i18n="readings"></h3>
+      <p class="src"><span class="pill neutral" data-i18n="src_user"></span></p>
       <div class="fields">
         <div class="full"><label for="mode" data-i18n="mode"></label><select id="mode"></select></div>
         <div id="heatBox"><label for="qh" data-i18n="q_heat"></label><input id="qh" type="number" min="0" step="10" value="5200"></div>
         <div><label for="qe" id="qeL"></label><input id="qe" type="number" min="0" step="10" value="1700"></div>
-        <div class="full"><label for="scop3">SCOP</label><input id="scop3" type="number" min="2" max="7" step="0.01"><div class="hint" data-i18n="scop3_h"></div></div>
+        <div class="full"><label for="scop3" data-i18n="scop3_l"></label><input id="scop3" type="number" min="2" max="7" step="0.01"><div class="hint" id="scop3i"></div></div>
+        <div class="full"><label for="period" data-i18n="period"></label><select id="period"></select></div>
+        <div><label for="tout" data-i18n="tout"></label><input id="tout" type="number" step="0.1" placeholder="°C"></div>
+        <div><label for="tsup" data-i18n="tsup"></label><input id="tsup" type="number" step="1" placeholder="°C"></div>
+        <div class="full hint" data-i18n="cond_h"></div>
       </div>
       <p class="note" data-i18n="bound_note"></p>
     </div>
@@ -206,7 +217,7 @@ hero_h:"Αποδίδει σωστά η αντλία θερμότητάς σας;
 hero_p:"Ελέγξτε το πιστοποιητικό του μοντέλου, δείτε τι κατανάλωση και κόστος να περιμένετε στο σπίτι σας, και συγκρίνετε με τις πραγματικές σας μετρήσεις.",
 tab1:"Πιστοποιητικό",tab2:"Αναμενόμενη απόδοση",tab3:"Ελέγχω την αντλία μου",
 t1_h:"Έλεγχος πιστοποιητικού Heat Pump KEYMARK",
-t1_p:"Αναζητήστε το μοντέλο σας στη βάση πιστοποιημένων προϊόντων. Φορτώστε το αρχείο που κατεβάσατε από το keymark.eu ή δείτε τα δοκιμαστικά δεδομένα. Το εργαλείο καλύπτει αντλίες αέρα-νερού για θέρμανση χώρου. Το ζεστό νερό χρήσης δεν περιλαμβάνεται.",
+t1_p:"Αναζητήστε το μοντέλο σας στη βάση πιστοποιημένων προϊόντων. Φορτώστε το αρχείο που κατεβάσατε από το keymark.eu ή δείτε τα δοκιμαστικά δεδομένα. Το εργαλείο καλύπτει αντλίες αέρα-νερού και μόνο τη θέρμανση χώρου. Η τιμή SCOP που θα επιλέξετε πρέπει να αντιστοιχεί στη κλιματική ζώνη και τη θερμοκρασία εφαρμογής του πιστοποιητικού.",
 search:"Κατασκευαστής, μοντέλο ή αριθμός πιστοποιητικού",import:"Φόρτωση αρχείου Keymark (.xlsx ή .csv)",
 import_h:"Το αρχείο μένει στον υπολογιστή σας και δεν ανεβαίνει πουθενά.",
 ex_tag:"Δοκιμαστικά δεδομένα με φανταστικά μοντέλα, όχι πραγματικά προϊόντα",
@@ -222,15 +233,15 @@ t2_p:"Η αναμενόμενη εποχική απόδοση (SPF) προκύπ
 home:"Το σπίτι",city:"Πόλη",area:"Εμβαδόν (m²)",ins:"Θερμομόνωση",fuel:"Σημερινό καύσιμο",eff:"Απόδοση λέβητα",
 cons_h:"Αν γνωρίζεις την ετήσια κατανάλωση καυσίμου, συμπλήρωσέ την (το αέριο σε kWh όπως στον λογαριασμό, το πετρέλαιο σε λίτρα). Αλλιώς συμπλήρωσε το εμβαδόν και την ετήσια ανάγκη θέρμανσης ανά m², π.χ. από ενεργειακή μελέτη ή πιστοποιητικό (τελική ενέργεια θέρμανσης χώρου).",
 cL_oil:"Ετήσιο πετρέλαιο (λίτρα)",cL_gas:"Ετήσιο φυσικό αέριο (kWh)",
-ins_0:"Παλιό κτίριο, χωρίς μόνωση",dhw_on:"Να συμπεριληφθεί το ζεστό νερό χρήσης",ppl:"Άτομα στο σπίτι",copd:"COP ζεστού νερού",dhw_h:"Προαιρετικό. Αν έχεις δώσει ετήσια κατανάλωση καυσίμου, θεωρούμε ότι περιλαμβάνει ήδη το ζεστό νερό και αυτή η επιλογή αγνοείται. Συμπλήρωσε την ετήσια ανάγκη ζεστού νερού και το COP ζεστού νερού από το πιστοποιητικό (πεδία DHW).",how_h:"Πώς υπολογίζεται κάθε τιμή",use_gap:"Χρήση αυτού του κενού στο βήμα 2",gap_used:"Το κενό {g}% πέρασε στο βήμα 2.",kwhl:"kWh ανά λίτρο πετρελαίου",kwhl_h:"ΤΟΤΕΕ 20701-1: κατώτερη θερμογόνος δύναμη πετρελαίου θέρμανσης 11,92 kWh/kg. Πολλαπλασίασε με την πυκνότητα του καυσίμου σου σε kg/L. Η προδιαγραφή απαιτεί να αναφέρεται η πυκνότητα και δεν ορίζει σταθερά όρια.",need_kwhl:"Συμπλήρωσε τα kWh ανά λίτρο του πετρελαίου σου για να υπολογιστούν τα αποτελέσματα.",qspec:"Ετήσια ανάγκη θέρμανσης (kWh/m²)",dhwq:"Ετήσια ανάγκη ζεστού νερού (kWh)",need_demand:"Συμπλήρωσε την ετήσια κατανάλωση καυσίμου ή το εμβαδόν μαζί με την ετήσια ανάγκη θέρμανσης (kWh/m²) για να υπολογιστούν τα αποτελέσματα.",
-how2:"<p><b>Ανάγκη θέρμανσης Q (kWh/έτος).</b> Αν δώσεις κατανάλωση: Q = κατανάλωση × απόδοση λέβητα, με το αέριο σε kWh και το πετρέλαιο σε λίτρα × kWh ανά λίτρο που δίνεις εσύ. Αλλιώς: Q = εμβαδόν × ετήσια ανάγκη θέρμανσης ανά m², όπως τη δηλώνεις εσύ.</p><p><b>Αναμενόμενο SPF.</b> SPF = SCOP × (1 − κενό απόδοσης). Το κενό είναι το ποσοστό που χάνεται στην πράξη σε σχέση με την εργαστηριακή τιμή.</p><p><b>Ρεύμα αντλίας.</b> Ρεύμα = Q / SPF. Με ζεστό νερό προστίθεται Q_ζνχ / (COP_ζνχ × (1 − κενό)), όπου Q_ζνχ και COP_ζνχ τα δίνεις εσύ. Υποθέτουμε το ίδιο κενό.</p><p><b>Κόστος.</b> Αντλία = ρεύμα × τιμή ρεύματος. Λέβητας = (Q + Q_ζνχ) / απόδοση λέβητα × τιμή καυσίμου ανά kWh (το πετρέλαιο μετατρέπεται από €/L με τα kWh ανά λίτρο που δίνεις). Όφελος = κόστος λέβητα − κόστος αντλίας.</p><p><b>SPF νεκρού σημείου.</b> Το SPF πάνω από το οποίο η αντλία κοστίζει λιγότερο: SPF = τιμή ρεύματος × απόδοση λέβητα / τιμή καυσίμου ανά kWh.</p><p><b>Σενάρια.</b> Εργαστήριο: κενό 0%. Τυπικό: το κενό που επιλέγεις. Απαισιόδοξο: κενό + 10 ποσοστιαίες μονάδες.</p>",
-how3:"<p><b>Μετρημένο SPF</b> = θερμότητα που παρήχθη / ρεύμα αντλίας για το ίδιο διάστημα.</p><p><b>Κενό από το SCOP</b> = (SCOP − SPF) / SCOP.</p><p><b>Αναμενόμενο SPF</b> = SCOP × (1 − τυπικό κενό του βήματος 2).</p><p><b>Ένδειξη.</b> Πράσινο αν το κενό είναι έως 10%. Κίτρινο έως max(τυπικό κενό, 10%) + 8 ποσοστιαίες μονάδες. Κόκκινο πάνω από αυτό. Τα όρια είναι παραδοχές του πρωτοτύπου και θα βαθμονομηθούν με τα δεδομένα της δοκιμής.</p><p><b>Μόνο ρεύμα.</b> Διαφορά = (μετρημένο ρεύμα − αναμενόμενο ρεύμα του βήματος 2) / αναμενόμενο. Πράσινο έως +10%, κίτρινο έως +30%, κόκκινο πάνω από αυτό.</p><p>Το SPF είναι εποχική τιμή. Λίγες ημέρες ή ένας ψυχρός μήνας δίνουν χαμηλότερη τιμή που δεν συγκρίνεται με το SCOP.</p>",ins_1:"Μέτρια μόνωση",ins_2:"Καλή μόνωση",
+ins_0:"Παλιό κτίριο, χωρίς μόνωση",how_h:"Πώς υπολογίζεται κάθε τιμή",use_gap:"Χρήση αυτού του κενού στο βήμα 2",gap_used:"Το κενό {g}% πέρασε στο βήμα 2.",kwhl:"kWh ανά λίτρο πετρελαίου",kwhl_h:"ΤΟΤΕΕ 20701-1: κατώτερη θερμογόνος δύναμη πετρελαίου θέρμανσης 11,92 kWh/kg. Πολλαπλασίασε με την πυκνότητα του καυσίμου σου σε kg/L. Η προδιαγραφή απαιτεί να αναφέρεται η πυκνότητα και δεν ορίζει σταθερά όρια.",need_kwhl:"Συμπλήρωσε τα kWh ανά λίτρο του πετρελαίου σου για να υπολογιστούν τα αποτελέσματα.",qspec:"Ετήσια ανάγκη θέρμανσης (kWh/m²)",dhwq:"Ετήσια ανάγκη ζεστού νερού (kWh)",need_demand:"Συμπλήρωσε την ετήσια κατανάλωση καυσίμου ή το εμβαδόν μαζί με την ετήσια ανάγκη θέρμανσης (kWh/m²) για να υπολογιστούν τα αποτελέσματα.",
+how2:"<p><b>Ανάγκη θέρμανσης Q (kWh/έτος).</b> Αν δώσετε κατανάλωση: Q = κατανάλωση × απόδοση λέβητα (αέριο σε kWh, πετρέλαιο σε λίτρα × kWh ανά λίτρο που δίνετε εσείς). Αλλιώς: Q = εμβαδόν × ετήσια ανάγκη θέρμανσης ανά m². Μόνο θέρμανση χώρου.</p><p><b>SCOP.</b> Από το πιστοποιητικό, για τη ζώνη (μέση, ψυχρή, θερμή) και τη θερμοκρασία εφαρμογής (35 ή 55 °C) που επιλέγετε. Οι ζώνες αντιστοιχούν στα κλίματα αναφοράς Στρασβούργο, Ελσίνκι, Αθήνα (Κανονισμοί ΕΕ 811/2013, 813/2013). Οι βαθμοημέρες της πόλης σας είναι μόνο ένδειξη για να επιλέξετε ζώνη και δεν μπαίνουν στον υπολογισμό.</p><p><b>Αναμενόμενο SPF.</b> SPF = SCOP × (1 − κενό απόδοσης). Το 25% είναι ενδεικτική παραδοχή από τις διάμεσες τιμές του Κεφαλαίου 6, όχι μέτρηση της αντλίας σας.</p><p><b>Ρεύμα αντλίας.</b> Ρεύμα = Q / SPF.</p><p><b>Κόστος.</b> Αντλία = ρεύμα × τιμή ρεύματος. Λέβητας = Q / απόδοση λέβητα × τιμή καυσίμου ανά kWh. Όφελος = κόστος λέβητα − κόστος αντλίας.</p><p><b>SPF νεκρού σημείου.</b> SPF = τιμή ρεύματος × απόδοση λέβητα / τιμή καυσίμου ανά kWh.</p><p><b>Σενάρια.</b> Εργαστήριο: κενό 0%. Τυπικό: το κενό που επιλέγετε. Απαισιόδοξο: κενό + 10 ποσοστιαίες μονάδες (ενδεικτική παραδοχή).</p>",
+how3:"<p><b>Μετρημένο SPF</b> = θερμότητα θέρμανσης χώρου που παρήχθη / ρεύμα αντλίας για το ίδιο διάστημα.</p><p><b>Κενό από το SCOP</b> = (SCOP − SPF) / SCOP. Το SCOP πρέπει να είναι της ίδιας ζώνης και θερμοκρασίας εφαρμογής με τη λειτουργία σας.</p><p><b>Αναμενόμενο SPF</b> = SCOP × (1 − κενό του βήματος 2).</p><p><b>Ένδειξη (ενδεικτική).</b> Πράσινο αν το κενό είναι έως 10%. Κίτρινο έως max(κενό βήματος 2, 10%) + 8 ποσοστιαίες μονάδες. Κόκκινο πάνω από αυτό. Τα όρια είναι παραδοχές του πρωτοτύπου χωρίς βιβλιογραφική τεκμηρίωση και θα βαθμονομηθούν με τα δεδομένα της δοκιμής.</p><p><b>Συνθήκες μέτρησης.</b> Η περίοδος, η μέση εξωτερική θερμοκρασία και η μέση θερμοκρασία προσαγωγής καταγράφονται στο αποτέλεσμα. Μερική περίοδος ή θερμοκρασία προσαγωγής πιο κοντά στην άλλη θερμοκρασία εφαρμογής δίνουν προειδοποίηση.</p><p><b>Μόνο ρεύμα.</b> Διαφορά = (μετρημένο ρεύμα − αναμενόμενο ρεύμα) / αναμενόμενο. Πράσινο έως +10%, κίτρινο έως +30%, κόκκινο πάνω από αυτό (ενδεικτικά όρια).</p>",ins_1:"Μέτρια μόνωση",ins_2:"Καλή μόνωση",
 fuel_gas:"Φυσικό αέριο",fuel_oil:"Πετρέλαιο",
-pump:"Η αντλία",ptype:"Τύπος",pt_air:"Αέρα-νερού",pt_ground:"Γεωθερμική",
-gapL:"Κενό απόδοσης: {g}%",gap_h:"Τυπική τιμή από τη βιβλιογραφία για αντλίες αέρα-νερού: περίπου 25%.",
+pump:"Η αντλία",
+gapL:"Κενό απόδοσης: {g}%",gap_h:"Ενδεικτική τιμή 25%: προκύπτει από τις διάμεσες τιμές των μελετών πεδίου που συγκεντρώθηκαν στο Κεφάλαιο 6 (SCOP 3,59 έναντι SPF 2,69, Πίνακας 6.1). Δεν είναι ιδιότητα της δικής σας αντλίας. Μπορείτε να την αλλάξετε.",
 prices:"Τιμές ενέργειας",p_el:"Ρεύμα €/kWh",p_gas:"Φυσ. αέριο €/kWh",p_oil:"Πετρέλαιο €/L",
 prices_h:"Διάλεξε ένα σενάριο από την πτυχιακή ή συμπλήρωσε δικές σου τιμές, π.χ. από τον λογαριασμό σου ή για μελλοντικές χρονιές. Οι τιμές αλλάζουν με τον χρόνο. Το πετρέλαιο είναι σε €/λίτρο (10 kWh/L).",preset:"Σενάριο τιμών",pr_custom:"Δικές μου τιμές",pr_eu:"ΕΕ, β' εξάμηνο 2025",pr_gr25:"Ελλάδα, Σεπτέμβριος 2025",pr_gr26:"Ελλάδα, Σεπτέμβριος 2026",need_prices:"Συμπλήρωσε τις τιμές ρεύματος και καυσίμου από τον λογαριασμό σου για να δεις κόστος, όφελος και SPF νεκρού σημείου.",
-hdd:"{h} βαθμοημέρες θέρμανσης",tdes:"Θερμοκρασία σχεδιασμού χειμώνα {t} °C (DB 1%)",
+hdd:"{h} βαθμοημέρες θέρμανσης (ένδειξη για να επιλέξετε κλίμα SCOP, δεν μπαίνει στον υπολογισμό)",
 r_heat:"Ετήσια ανάγκη θέρμανσης",r_spf:"Αναμενόμενο SPF",r_el:"Ρεύμα αντλίας ανά έτος",r_save:"Ετήσιο όφελος",r_be:"SPF νεκρού σημείου",
 kwh:"kWh",eur:"€",yr:"/έτος",
 b_old:"Σημερινός λέβητας",b_hp:"Αντλία",
@@ -238,13 +249,13 @@ scen:"Σενάρια",s_lab:"Εργαστήριο (SCOP)",s_typ:"Τυπικό σ
 th_sc:"Σενάριο",th_spf:"SPF",th_el:"kWh ρεύμα",th_cost:"Κόστος €",th_sav:"Όφελος €",
 be_good:"Το αναμενόμενο SPF είναι πάνω από το SPF νεκρού σημείου ({b}). Η αντλία αναμένεται να κοστίζει λιγότερο από τον λέβητα.",
 be_bad:"Το αναμενόμενο SPF είναι κάτω από το SPF νεκρού σημείου ({b}). Με αυτές τις τιμές η αντλία αναμένεται να κοστίζει περισσότερο από τον λέβητα.",
-est_note:"Τα αποτελέσματα βασίζονται στα στοιχεία που συμπληρώνεις. Δεν αντικαθιστούν ενεργειακή μελέτη.",
+est_note:"Τα αποτελέσματα βασίζονται στα στοιχεία που συμπληρώνετε και σε παραδοχές (το κενό απόδοσης και το σενάριο «Απαισιόδοξο» είναι ενδεικτικά). Δεν αντικαθιστούν ενεργειακή μελέτη.",
 t3_h:"Αποδίδει η αντλία μου όπως πρέπει;",
 t3_p:"Βάλτε τις μετρήσεις από τον μετρητή θερμότητας και τον μετρητή ρεύματος για το ίδιο διάστημα. Η σύγκριση γίνεται με το δηλωμένο SCOP και το τυπικό κενό.",
 readings:"Μετρήσεις",mode:"Τι μετράτε;",m_heat:"Έχω μετρητή θερμότητας",m_el:"Έχω μόνο ρεύμα, ετήσια τιμή",
 q_heat:"Θερμότητα που παρήχθη (kWh)",qe_a:"Ρεύμα αντλίας (kWh)",qe_b:"Ετήσιο ρεύμα αντλίας (kWh)",
-scop3_h:"Παίρνει την τιμή από το βήμα 1 ή 2. Μπορείτε να τη διορθώσετε.",
-bound_note:"Μετρήστε μόνο θέρμανση χώρου, με το ρεύμα του συμπιεστή, του ανεμιστήρα και των κυκλοφορητών. Μέτρηση λίγων ημερών ή μόνο του χειμώνα δεν είναι ετήσια. Το SPF ενός ψυχρού μήνα βγαίνει χαμηλότερο.",
+scop3_h:"Παίρνει την τιμή από το βήμα 1 ή 2. Πρέπει να αντιστοιχεί σε κλίμα: {z}, θερμοκρασία εφαρμογής {a} °C. Μπορείτε να τη διορθώσετε.",
+bound_note:"Μετρήστε μόνο θέρμανση χώρου, με το ρεύμα του συμπιεστή, του ανεμιστήρα και των κυκλοφορητών, χωρίς το ζεστό νερό χρήσης. Μέτρηση λίγων ημερών ή μόνο του χειμώνα δεν είναι ετήσια. Το SPF ενός ψυχρού μήνα βγαίνει χαμηλότερο.",
 r_meas:"Μετρημένο SPF",r_gap:"Κενό από το SCOP",r_exp:"Αναμενόμενο SPF",
 v_good:"Η απόδοση είναι εντός προσδοκιών",v_warn:"Η απόδοση είναι στα τυπικά όρια της πράξης",v_bad:"Η απόδοση είναι χαμηλή, αξίζει έλεγχος",
 vd_good:"Το κενό είναι έως 10%. Είναι κοντά στη δηλωμένη τιμή.",
@@ -256,9 +267,15 @@ tip1:"Θερμοκρασία προσαγωγής: κάθε βαθμός χαμ�
 tip2:"Συχνές εκκινήσεις και στάσεις του συμπιεστή δείχνουν υπερδιαστασιολόγηση ή λάθος ρύθμιση.",
 tip3:"Απόψυξη και θερμαντικό στοιχείο βοηθείας: δείτε πόσο ρεύμα πάει σε αυτά τον χειμώνα.",
 tip4:"Υδραυλικό σύστημα: ΔΤ προσαγωγής-επιστροφής και ροή κυκλοφορητή.",
-tip5:"Ζεστό νερό χρήσης: αν περιλαμβάνεται στο ρεύμα αλλά όχι στη θερμότητα, το SPF βγαίνει χαμηλότερο.",
+
 el_note:"Χωρίς μετρητή θερμότητας το SPF δεν υπολογίζεται. Συγκρίνουμε το ετήσιο ρεύμα σας με το αναμενόμενο από το βήμα 2.",
 r_elm:"Μετρημένο ρεύμα",r_ele:"Αναμενόμενο ρεύμα",r_diff:"Διαφορά",
+scop_l:"SCOP (από το πιστοποιητικό)",zone:"Κλιματική ζώνη SCOP",atemp:"Θερμοκρασία εφαρμογής",z_avg:"Μέση (Στρασβούργο)",z_cold:"Ψυχρή (Ελσίνκι)",z_warm:"Θερμή (Αθήνα)",a_low:"Χαμηλή, 35 °C",a_med:"Μεσαία, 55 °C",
+zone_h:"Το πιστοποιητικό δίνει SCOP για κάθε ζώνη και θερμοκρασία. Επιλέξτε αυτές που ταιριάζουν στο σπίτι και στο σύστημά σας (π.χ. ενδοδαπέδια θέρμανση 35 °C, θερμοσίφωνες ή σώματα 55 °C). Οι βαθμοημέρες της πόλης βοηθούν: λίγες σημαίνουν θερμότερο κλίμα.",
+src_cert:"Από το πιστοποιητικό Keymark",src_user:"Δικά σας στοιχεία",src_assume:"Παραδοχή (ενδεικτική)",
+scop3_l:"SCOP (από το πιστοποιητικό)",period:"Περίοδος μέτρησης",p_year:"Ολόκληρο έτος",p_part:"Μέρος του έτους",tout:"Μέση εξωτερική θερμοκρασία (°C)",tsup:"Μέση θερμοκρασία προσαγωγής (°C)",
+cond_h:"Συμπληρώστε τις συνθήκες μέτρησης. Το SCOP αφορά ολόκληρη περίοδο θέρμανσης στο κλίμα αναφοράς και σε συγκεκριμένη θερμοκρασία εφαρμογής.",cond_h2:"Συνθήκες:",cond_used:"Το SCOP αφορά: {z}, {a} °C.",c_tout:"Μέση εξωτερική: {v} °C.",c_tsup:"Μέση προσαγωγής: {v} °C.",
+w_part:"Η περίοδος δεν είναι ολόκληρο έτος. Το SPF δεν συγκρίνεται άμεσα με το SCOP και το αποτέλεσμα είναι μόνο ένδειξη.",w_temp:"Η μέση θερμοκρασία προσαγωγής είναι πιο κοντά στους {o} °C παρά στους {a} °C του SCOP που διαλέξατε. Δοκιμάστε το SCOP της άλλης θερμοκρασίας εφαρμογής.",
 foot:"Ερευνητικό πρωτότυπο, μέρος διπλωματικής εργασίας ΑΠΘ για την αξιολόγηση της απόδοσης αντλιών θερμότητας. Δεν προορίζεται για εμπορική χρήση. Οι εκτιμήσεις βασίζονται σε βιβλιογραφικές τιμές και δεν αντικαθιστούν ενεργειακή μελέτη ή επιθεώρηση."
 },
 en:{
@@ -267,7 +284,7 @@ hero_h:"Is your heat pump performing as it should?",
 hero_p:"Check your model's certificate, see the consumption and cost to expect in your home, and compare with your own meter readings.",
 tab1:"Certificate",tab2:"Expected performance",tab3:"Check my pump",
 t1_h:"Heat Pump KEYMARK certificate check",
-t1_p:"Look up your model in the certified products database. Load the file you downloaded from keymark.eu, or browse the sample data. The tool covers air-to-water heat pumps for space heating. Domestic hot water is not included.",
+t1_p:"Search for your model in the certified-products database. Load the file you downloaded from keymark.eu or view the sample data. The tool covers air-to-water pumps and space heating only. The SCOP you pick must match the climate zone and application temperature of the certificate.",
 search:"Manufacturer, model or certificate number",import:"Load Keymark file (.xlsx or .csv)",
 import_h:"The file stays on your computer and is not uploaded anywhere.",
 ex_tag:"Sample data with fictional models, not real products",
@@ -283,15 +300,15 @@ t2_p:"Expected seasonal performance (SPF) is the declared SCOP minus the typical
 home:"Your home",city:"City",area:"Floor area (m²)",ins:"Insulation",fuel:"Current fuel",eff:"Boiler efficiency",
 cons_h:"If you know your yearly fuel consumption, enter it (gas in kWh as on your bill, oil in litres). Otherwise enter floor area and yearly heating demand per m², for example from an energy audit or certificate (final energy for space heating).",
 cL_oil:"Yearly heating oil (litres)",cL_gas:"Yearly natural gas (kWh)",
-ins_0:"Older building, no insulation",dhw_on:"Include domestic hot water",ppl:"People in the home",copd:"Hot water COP",dhw_h:"Optional. If you entered yearly fuel consumption, it is assumed to include hot water already and this option is ignored. Enter yearly hot water demand and the hot water COP from the certificate (DHW fields).",how_h:"How each value is calculated",use_gap:"Use this gap in step 2",gap_used:"Gap {g}% sent to step 2.",kwhl:"kWh per litre of heating oil",kwhl_h:"TOTEE 20701-1: lower calorific value of heating oil 11.92 kWh/kg. Multiply by the density of your fuel in kg/L. The specification requires density to be reported and sets no fixed limits.",need_kwhl:"Enter the kWh per litre of your heating oil to see results.",qspec:"Yearly heating demand (kWh/m²)",dhwq:"Yearly hot water demand (kWh)",need_demand:"Enter your yearly fuel consumption, or floor area together with yearly heating demand (kWh/m²), to see results.",
-how2:"<p><b>Heat demand Q (kWh/year).</b> If you enter consumption: Q = consumption × boiler efficiency, with gas in kWh and oil in litres × the kWh per litre you enter. Otherwise: Q = floor area × yearly heating demand per m², as you enter it.</p><p><b>Expected SPF.</b> SPF = SCOP × (1 − performance gap). The gap is the share lost in the field compared with the laboratory value.</p><p><b>Pump electricity.</b> Electricity = Q / SPF. With hot water selected, Q_dhw / (COP_dhw × (1 − gap)) is added, where Q_dhw and COP_dhw are entered by you. The same gap is assumed.</p><p><b>Cost.</b> Pump = electricity × electricity price. Boiler = (Q + Q_dhw) / boiler efficiency × fuel price per kWh (oil is converted from €/L with the kWh per litre you enter). Saving = boiler cost − pump cost.</p><p><b>Break-even SPF.</b> The SPF above which the pump costs less: SPF = electricity price × boiler efficiency / fuel price per kWh.</p><p><b>Scenarios.</b> Laboratory: gap 0%. Typical: your selected gap. Pessimistic: gap + 10 percentage points.</p>",
-how3:"<p><b>Measured SPF</b> = heat produced / pump electricity over the same period.</p><p><b>Gap from SCOP</b> = (SCOP − SPF) / SCOP.</p><p><b>Expected SPF</b> = SCOP × (1 − typical gap from step 2).</p><p><b>Indicator.</b> Green if the gap is up to 10%. Yellow if up to max(typical gap, 10%) + 8 percentage points. Red above that. The thresholds are prototype assumptions and will be calibrated with the field test data.</p><p><b>Electricity only.</b> Difference = (measured electricity − expected electricity from step 2) / expected. Green up to +10%, yellow up to +30%, red above.</p><p>SPF is a seasonal value. A few days or one cold month gives a lower figure and cannot be compared with SCOP.</p>",ins_1:"Moderate insulation",ins_2:"Good insulation",
+ins_0:"Older building, no insulation",how_h:"How each value is calculated",use_gap:"Use this gap in step 2",gap_used:"Gap {g}% sent to step 2.",kwhl:"kWh per litre of heating oil",kwhl_h:"TOTEE 20701-1: lower calorific value of heating oil 11.92 kWh/kg. Multiply by the density of your fuel in kg/L. The specification requires density to be reported and sets no fixed limits.",need_kwhl:"Enter the kWh per litre of your heating oil to see results.",qspec:"Yearly heating demand (kWh/m²)",dhwq:"Yearly hot water demand (kWh)",need_demand:"Enter your yearly fuel consumption, or floor area together with yearly heating demand (kWh/m²), to see results.",
+how2:"<p><b>Heat demand Q (kWh/year).</b> If you enter consumption: Q = consumption × boiler efficiency (gas in kWh, oil in litres × the kWh per litre you enter). Otherwise: Q = floor area × yearly heating demand per m². Space heating only.</p><p><b>SCOP.</b> From the certificate, for the zone (average, colder, warmer) and application temperature (35 or 55 °C) you select. Zones correspond to the reference climates Strasbourg, Helsinki, Athens (EU Regulations 811/2013, 813/2013). Your city's degree-days are only a guide for choosing the zone and are not used in the calculation.</p><p><b>Expected SPF.</b> SPF = SCOP × (1 − performance gap). The 25% is an indicative assumption from the Chapter 6 medians, not a measurement of your pump.</p><p><b>Pump electricity.</b> Electricity = Q / SPF.</p><p><b>Cost.</b> Pump = electricity × electricity price. Boiler = Q / boiler efficiency × fuel price per kWh. Saving = boiler cost − pump cost.</p><p><b>Break-even SPF.</b> SPF = electricity price × boiler efficiency / fuel price per kWh.</p><p><b>Scenarios.</b> Laboratory: gap 0%. Typical: your selected gap. Pessimistic: gap + 10 percentage points (indicative assumption).</p>",
+how3:"<p><b>Measured SPF</b> = space-heating heat produced / pump electricity over the same period.</p><p><b>Gap from SCOP</b> = (SCOP − SPF) / SCOP. The SCOP must be for the same zone and application temperature as your operation.</p><p><b>Expected SPF</b> = SCOP × (1 − gap from step 2).</p><p><b>Indicator (indicative).</b> Green if the gap is up to 10%. Yellow up to max(step 2 gap, 10%) + 8 percentage points. Red above. The thresholds are prototype assumptions without literature support and will be calibrated with the field test data.</p><p><b>Measurement conditions.</b> The period, mean outdoor temperature and mean supply temperature are recorded in the result. A partial period or a supply temperature closer to the other application temperature gives a warning.</p><p><b>Electricity only.</b> Difference = (measured electricity − expected electricity) / expected. Green up to +10%, yellow up to +30%, red above (indicative thresholds).</p>",ins_1:"Moderate insulation",ins_2:"Good insulation",
 fuel_gas:"Natural gas",fuel_oil:"Heating oil",
-pump:"Your pump",ptype:"Type",pt_air:"Air-to-water",pt_ground:"Ground source",
-gapL:"Performance gap: {g}%",gap_h:"Typical literature value for air-to-water pumps: about 25%.",
+pump:"Your pump",
+gapL:"Performance gap: {g}%",gap_h:"Indicative 25% value: it comes from the median values of the field studies compiled in Chapter 6 (SCOP 3.59 vs SPF 2.69, Table 6.1). It is not a property of your own pump. You can change it.",
 prices:"Energy prices",p_el:"Electricity €/kWh",p_gas:"Gas €/kWh",p_oil:"Oil €/L",
 prices_h:"Pick a scenario from the thesis or enter your own prices, for example from your bill or for a future year. Prices change over time. Oil is in €/litre (10 kWh/L).",preset:"Price scenario",pr_custom:"My own prices",pr_eu:"EU, H2 2025",pr_gr25:"Greece, September 2025",pr_gr26:"Greece, September 2026",need_prices:"Enter your electricity and fuel prices from your bill to see cost, saving and break-even SPF.",
-hdd:"{h} heating degree-days",tdes:"Winter design temperature {t} °C (DB 1%)",
+hdd:"{h} heating degree-days (a guide for choosing the SCOP climate, not used in the calculation)",
 r_heat:"Yearly heat demand",r_spf:"Expected SPF",r_el:"Pump electricity per year",r_save:"Yearly saving",r_be:"Break-even SPF",
 kwh:"kWh",eur:"€",yr:"/yr",
 b_old:"Current boiler",b_hp:"Heat pump",
@@ -299,13 +316,13 @@ scen:"Scenarios",s_lab:"Laboratory (SCOP)",s_typ:"Typical in the field",s_bad:"P
 th_sc:"Scenario",th_spf:"SPF",th_el:"kWh electricity",th_cost:"Cost €",th_sav:"Saving €",
 be_good:"Expected SPF is above the break-even SPF ({b}). The pump is expected to cost less than your boiler.",
 be_bad:"Expected SPF is below the break-even SPF ({b}). At these prices the pump is expected to cost more than your boiler.",
-est_note:"Results rely on the figures you enter. They do not replace an energy audit.",
+est_note:"Results rely on the figures you enter and on assumptions (the performance gap and the Pessimistic scenario are indicative). They do not replace an energy study.",
 t3_h:"Is my pump performing correctly?",
 t3_p:"Enter readings from your heat meter and electricity meter for the same period. The result is compared with the declared SCOP and the typical gap.",
 readings:"Readings",mode:"What can you measure?",m_heat:"I have a heat meter",m_el:"Electricity only, yearly value",
 q_heat:"Heat produced (kWh)",qe_a:"Pump electricity (kWh)",qe_b:"Yearly pump electricity (kWh)",
-scop3_h:"Taken from step 1 or 2. You can correct it.",
-bound_note:"Measure space heating only, with compressor, fan and circulation pump electricity. A few days or only winter is not a full year. A cold month gives a lower SPF.",
+scop3_h:"Taken from step 1 or 2. It must match the climate: {z}, application temperature {a} °C. You can correct it.",
+bound_note:"Measure space heating only, with compressor, fan and circulator electricity, and without domestic hot water. A measurement of a few days or of winter only is not annual. The SPF of a cold month comes out lower.",
 r_meas:"Measured SPF",r_gap:"Gap from SCOP",r_exp:"Expected SPF",
 v_good:"Performance is within expectations",v_warn:"Performance is within the typical field range",v_bad:"Performance is low, worth checking",
 vd_good:"The gap is up to 10%. This is close to the declared value.",
@@ -317,9 +334,15 @@ tip1:"Flow temperature: every degree lower improves SPF. Review the heating curv
 tip2:"Frequent compressor starts and stops point to oversizing or a wrong setting.",
 tip3:"Defrost and backup heater: see how much electricity goes to them in winter.",
 tip4:"Hydraulics: flow-return temperature difference and circulation pump flow.",
-tip5:"Domestic hot water: if it is in the electricity reading but not in the heat reading, SPF comes out lower.",
+
 el_note:"Without a heat meter SPF cannot be calculated. Your yearly electricity is compared with the expected value from step 2.",
 r_elm:"Measured electricity",r_ele:"Expected electricity",r_diff:"Difference",
+scop_l:"SCOP (from the certificate)",zone:"SCOP climate zone",atemp:"Application temperature",z_avg:"Average (Strasbourg)",z_cold:"Colder (Helsinki)",z_warm:"Warmer (Athens)",a_low:"Low, 35 °C",a_med:"Medium, 55 °C",
+zone_h:"The certificate gives a SCOP for each zone and temperature. Pick those that fit your home and system (e.g. underfloor heating 35 °C, radiators 55 °C). Your city's degree-days help: fewer means a warmer climate.",
+src_cert:"From the Keymark certificate",src_user:"Your own data",src_assume:"Assumption (indicative)",
+scop3_l:"SCOP (from the certificate)",period:"Measurement period",p_year:"Whole year",p_part:"Part of the year",tout:"Mean outdoor temperature (°C)",tsup:"Mean supply temperature (°C)",
+cond_h:"Enter the measurement conditions. SCOP refers to a whole heating season in a reference climate at a given application temperature.",cond_h2:"Conditions:",cond_used:"SCOP refers to: {z}, {a} °C.",c_tout:"Mean outdoor: {v} °C.",c_tsup:"Mean supply: {v} °C.",
+w_part:"The period is not a whole year. SPF is not directly comparable with SCOP and the result is only an indication.",w_temp:"The mean supply temperature is closer to {o} °C than to the {a} °C of the SCOP you selected. Try the SCOP of the other application temperature.",
 foot:"Research prototype, part of an AUTh diploma thesis on heat pump performance evaluation. Not intended for commercial use. Estimates rely on literature values and do not replace an energy audit or inspection."
 }};
 
@@ -340,9 +363,7 @@ var SAMPLE=[
 ["Example Brand A","EX-A 6 air/water","4.62",182,6,52,"EX-001","2027-03-31"],
 ["Example Brand A","EX-A 10 air/water","4.38",172,10,56,"EX-002","2027-03-31"],
 ["Example Brand B","EX-B 8 monobloc","4.85",190,8,54,"EX-014","2026-06-30"],
-["Example Brand B","EX-B 12 monobloc","4.51",177,12,58,"EX-015","2028-01-15"],
-["Example Brand C","EX-C 9 ground/water","5.60",218,9,44,"EX-107","2027-11-30"],
-["Example Brand C","EX-C 14 ground/water","5.42",211,14,46,"EX-108","2026-02-28"]
+["Example Brand B","EX-B 12 monobloc","4.51",177,12,58,"EX-015","2028-01-15"]
 ].map(function(r){return{mfr:r[0],model:r[1],scop:r[2],etas:r[3],prated:r[4],sound:r[5],cert:r[6],valid:r[7]}});
 
 var $=function(i){return document.getElementById(i)};
@@ -362,7 +383,9 @@ function applyLang(){
   $("lg-el").setAttribute("aria-pressed",lang==="el");$("lg-en").setAttribute("aria-pressed",lang==="en");
   
   fillSelect("fuel",["gas","oil"].map(function(i){return t("fuel_"+i)}),$("fuel").value||"0",["gas","oil"]);
-  fillSelect("ptype",[t("pt_air")],"air",["air"]);
+  fillSelect("zone",[t("z_avg"),t("z_cold"),t("z_warm")],$("zone").value||"avg",["avg","cold","warm"]);
+  fillSelect("atemp",[t("a_low"),t("a_med")],$("atemp").value||"35",["35","55"]);
+  fillSelect("period",[t("p_year"),t("p_part")],$("period").value||"year",["year","part"]);
   fillSelect("mode",[t("m_heat"),t("m_el")],$("mode").value||"0",["heat","el"]);
   fillSelect("preset",[t("pr_custom"),t("pr_eu"),t("pr_gr25"),t("pr_gr26")],$("preset").value||"custom",["custom","eu25","gr25","gr26"]);
   var cs=$("city"),cur=cs.value||"ath";cs.innerHTML="";
@@ -459,18 +482,16 @@ function calc(){
   var cons=num($("cons").value),Q;
   if(cons&&cons>0)Q=cons*(fuel==="gas"?1:kwhl)*eff;
   else Q=(+$("area").value||0)*(+$("qspec").value||0);
-  var dOn=$("dhwOn").checked&&!(cons&&cons>0),copd=+$("copd").value||0,Qd=(dOn&&copd>0)?(+$("dhwq").value||0):0;
-  var boiler=(Q+Qd)/eff*pf,be=pe*eff/pf;
-  function sc(g){var spf=scop*(1-g),el=Q/spf+(Qd>0?Qd/(copd*(1-g)):0),cost=el*pe;return{g:g,spf:spf,el:el,cost:cost,sav:boiler-cost}}
-  return{scop:scop,gap:gap,fuel:fuel,eff:eff,pe:pe,pf:pf,Q:Q+Qd,boiler:boiler,be:be,measured:!!(cons&&cons>0),needKwhl:(fuel==="oil"&&!(kwhl>0)),
+  var boiler=Q/eff*pf,be=pe*eff/pf;
+  function sc(g){var spf=scop*(1-g),el=Q/spf,cost=el*pe;return{g:g,spf:spf,el:el,cost:cost,sav:boiler-cost}}
+  return{scop:scop,gap:gap,fuel:fuel,eff:eff,pe:pe,pf:pf,Q:Q,boiler:boiler,be:be,measured:!!(cons&&cons>0),needKwhl:(fuel==="oil"&&!(kwhl>0)),
     lab:sc(0),typ:sc(gap),bad:sc(Math.min(gap+0.10,0.6))};
 }
 function renderExpected(){
   var c=city(),r=calc(),f=r.fuel;
-  $("dhwBox").hidden=!$("dhwOn").checked;
   $("gapL").textContent=t("gapL",{g:Math.round(r.gap*100)});
   $("consL").textContent=t(f==="oil"?"cL_oil":"cL_gas");$("kwhlBox").hidden=(f!=="oil");
-  $("cityInfo").textContent=t("hdd",{h:fmt(c[3])})+(c[4]!==null?" · "+t("tdes",{t:fmt(c[4],1)}):"");
+  $("cityInfo").textContent=t("hdd",{h:fmt(c[3])});
   if(!(r.Q>0)){$("res2").innerHTML='<div class="verdict warn"><span>'+t(r.needKwhl&&r.measured?"need_kwhl":"need_demand")+"</span></div>";return}
   if(!(r.pe>0&&r.pf>0)){var s0=r.typ;$("res2").innerHTML='<div class="kpis"><div class="kpi main"><div class="v">'+fmt(s0.spf,2)+'</div><div class="l">'+t("r_spf")+'</div></div><div class="kpi"><div class="v">'+fmt(r.Q)+'</div><div class="l">'+t("r_heat")+" ("+t("kwh")+")</div></div><div class=\"kpi\"><div class=\"v\">"+fmt(s0.el)+'</div><div class="l">'+t("r_el")+" ("+t("kwh")+")</div></div></div><div class=\"verdict warn\"><span>"+t(r.needKwhl?"need_kwhl":"need_prices")+'</span></div><p class="note">'+t("est_note")+"</p>";return}
   var s=r.typ,mx=Math.max(r.boiler,s.cost,1);
@@ -487,7 +508,7 @@ function renderExpected(){
    '<div class="bar-row"><span>'+t("b_hp")+'</span><div class="track"><div class="fill" style="width:'+(Math.max(s.cost,0)/mx*100)+'%;background:var(--accent)"></div></div><span class="val">'+fmt(s.cost)+" €</span></div></div>"+
    '<div class="verdict '+(verdictOk?"good":"bad")+'"><span>'+t(verdictOk?"be_good":"be_bad",{b:fmt(r.be,2)})+"</span></div>"+
    '<h3>'+t("scen")+'</h3><div class="tablewrap"><table><tr><th>'+t("th_sc")+'</th><th class="num">'+t("th_spf")+'</th><th class="num">'+t("th_el")+'</th><th class="num">'+t("th_cost")+'</th><th class="num">'+t("th_sav")+"</th></tr>"+rows+"</table></div>"+
-   '<p class="note">'+t("est_note")+"</p>";
+   '<p class="note">'+t("est_note")+" "+t("cond_used",{z:t("z_"+$("zone").value),a:$("atemp").value})+"</p>";
 }
 function renderCheck(){
   var mode=$("mode").value||"heat";
@@ -498,6 +519,9 @@ function renderCheck(){
     if(!(e>0&&h>0)){$("res3").innerHTML="";return}
     var spf=h/e,gap=(scop-spf)/scop,exp=scop*(1-x.gap);
     var thr=Math.max(x.gap,0.10)+0.08;
+    var ts=$("tsup").value!==""?+$("tsup").value:null,at=+$("atemp").value,warns=[];
+    if($("period").value==="part")warns.push(t("w_part"));
+    if(ts!==null&&Math.abs(ts-(at===35?55:35))<Math.abs(ts-at))warns.push(t("w_temp",{a:at,o:at===35?55:35}));
     var cls=gap<=0.10?"good":gap<=thr?"warn":"bad";
     var max=Math.max(scop*1.1,spf*1.1,2),min=1;
     function pos(v){return Math.min(100,Math.max(0,(v-min)/(max-min)*100))}
@@ -506,7 +530,8 @@ function renderCheck(){
       '<div class="kpi"><div class="v">'+fmt(exp,2)+'</div><div class="l">'+t("r_exp")+"</div></div></div>"+
       '<div class="verdict '+cls+'"><b>'+t("v_"+cls)+"</b><span>"+t("vd_"+cls)+"</span></div>"+'<button class="btn" id="useGap" data-gap="'+(gap*100)+'" data-scop="'+scop+'" style="margin-bottom:14px">'+t("use_gap")+"</button>"+
       '<div class="gauge"><div class="mk dn" style="left:'+pos(exp)+'%"><span>'+t("g_exp")+" "+fmt(exp,2)+'</span></div><div class="mk up" style="left:'+pos(scop)+'%"><span>'+t("g_scop")+" "+fmt(scop,2)+'</span></div><div class="mk you up" style="left:'+pos(spf)+'%;"><span style="color:var(--heat);top:-32px">'+t("g_you")+" "+fmt(spf,2)+"</span></div></div>";
-    if(cls!=="good")out+='<h3>'+t("tips_h")+'</h3><ul class="tips">'+[1,2,3,4,5].map(function(i){return "<li>"+t("tip"+i)+"</li>"}).join("")+"</ul>";
+    out+='<p class="note"><b>'+t("cond_h2")+'</b> '+t("cond_used",{z:t("z_"+$("zone").value),a:at})+($("tout").value!==""?" "+t("c_tout",{v:$("tout").value}):"")+(ts!==null?" "+t("c_tsup",{v:ts}):"")+"</p>"+warns.map(function(w){return '<div class="verdict warn"><span>'+w+"</span></div>"}).join("");
+    if(cls!=="good")out+='<h3>'+t("tips_h")+'</h3><ul class="tips">'+[1,2,3,4].map(function(i){return "<li>"+t("tip"+i)+"</li>"}).join("")+"</ul>";
   }else{
     if(!(e>0)){$("res3").innerHTML="";return}
     if(!(x.typ.el>0)){$("res3").innerHTML='<div class="verdict warn"><span>'+t("need_demand")+"</span></div>";return}
@@ -520,7 +545,7 @@ function renderCheck(){
 function renderAll(){
   if(tab==="certificate")renderCerts();
   if(tab==="expected")renderExpected();
-  if(tab==="check"){if(!scop3Touched)$("scop3").value=$("scop").value;renderCheck()}
+  if(tab==="check"){if(!scop3Touched)$("scop3").value=$("scop").value;$("scop3i").textContent=t("scop3_h",{z:t("z_"+$("zone").value),a:$("atemp").value});renderCheck()}
 }
 
 /* ---------- events ---------- */
@@ -533,7 +558,7 @@ $("certTable").onclick=function(ev){
   var r=data[+b.getAttribute("data-use")],s=num(r.scop);
   if(s){$("scop").value=s;scop3Touched=false;toast(t("used",{s:fmt(s,2)}));setTab("expected")}
 };
-["city","area","qspec","fuel","cons","eff","scop","pe","pg","po","gap","dhwOn","dhwq","copd","kwhl"].forEach(function(id){
+["city","area","qspec","fuel","cons","eff","scop","zone","atemp","pe","pg","po","gap","kwhl"].forEach(function(id){
   $(id).addEventListener("input",function(){
     if(id==="gap")gapTouched=true;
     if(id==="fuel"){$("eff").value=E.eff[$("fuel").value]}
@@ -545,8 +570,7 @@ $("res3").onclick=function(ev){var b=ev.target.closest("#useGap");if(!b)return;v
 var PRESETS={eu25:[0.2896,0.1228,null],gr25:[0.170,0.0787,1.02],gr26:[0.25,0.110,1.79]};
 $("preset").onchange=function(){var p=PRESETS[$("preset").value];if(p){$("pe").value=p[0];$("pg").value=p[1];if(p[2]!==null)$("po").value=p[2]}renderAll()};
 ["pe","pg","po"].forEach(function(id){$(id).addEventListener("input",function(){$("preset").value="custom"})});
-$("ptype").onchange=function(){if(!gapTouched||true){$("gap").value=$("ptype").value==="ground"?17:25;gapTouched=false}renderAll()};
-["mode","qh","qe","scop3"].forEach(function(id){$(id).addEventListener("input",function(){if(id==="scop3")scop3Touched=true;renderAll()})});
+["mode","qh","qe","scop3","period","tout","tsup"].forEach(function(id){$(id).addEventListener("input",function(){if(id==="scop3")scop3Touched=true;renderAll()})});
 window.addEventListener("hashchange",function(){var h=location.hash.slice(1);if(["certificate","expected","check"].indexOf(h)>=0&&h!==tab)setTab(h)});
 
 /* ---------- start ---------- */
